@@ -33,7 +33,6 @@
   <properties>
     <port>8888</port>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <webbpm-modules.version>2.87</webbpm-modules.version>
   </properties>
 
   <dependencyManagement>
@@ -53,11 +52,6 @@
         <artifactId>jbpm-designer-client</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>ru.cg.webbpm.modules.bpmn</groupId>
-        <artifactId>webbpm-workitem</artifactId>
-        <version>${webbpm-modules.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -157,7 +151,7 @@
         <module>jbpm-designer-distribution-wars</module>
       </modules>
     </profile>
-    
+
     <profile>
       <id>doclint-java8-disable</id>
       <activation>
