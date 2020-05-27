@@ -528,6 +528,11 @@
               <targetPath>WEB-INF</targetPath>
             </resource>
             <resource>
+              <directory>${basedir}/src/main/resources/META-INF</directory>
+              <filtering>true</filtering>
+              <targetPath>META-INF</targetPath>
+            </resource>
+            <resource>
               <directory>${basedir}/target/org/jbpm/designer/public</directory>
               <filtering>true</filtering>
               <targetPath>/org.jbpm.designer.jBPMDesigner/</targetPath>

@@ -158,10 +158,6 @@
     <url-pattern>/editor/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>DirectoryListingServlet</servlet-name>
-    <url-pattern>/generated-uis/</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
     <servlet-name>UUIDBasedRepositoryServlet</servlet-name>
     <url-pattern>/uuidRepository</url-pattern>
   </servlet-mapping>
