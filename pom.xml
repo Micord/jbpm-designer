@@ -54,11 +54,6 @@
         <version>${project.version}</version>
         <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>ru.cg.webbpm.modules.bpmn</groupId>
-        <artifactId>webbpm-workitem</artifactId>
-        <version>${webbpm-modules.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 

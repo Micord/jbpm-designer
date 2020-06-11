@@ -16,13 +16,6 @@
   <name>jBPM Designer - Backend</name>
 
   <dependencies>
-
-    <!-- WebBPM -->
-    <dependency>
-      <groupId>ru.cg.webbpm.modules.bpmn</groupId>
-      <artifactId>webbpm-workitem</artifactId>
-    </dependency>
-
     <!-- jBPM Designer - Client -->
     <dependency>
       <groupId>org.jbpm</groupId>

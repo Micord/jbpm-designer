@@ -1,0 +1,8 @@
+[
+  // the WebBPM task work item
+  [
+    "name" : "WebBPMTask",
+    "displayName" : "Web-BPM Task",
+    "icon" : "icons/task.png"
+  ]
+]
