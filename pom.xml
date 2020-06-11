@@ -203,7 +203,7 @@
     <repository>
       <id>central</id>
       <name>central</name>
-      <url>http://repo.cg.ru/repository/maven-public</url>
+      <url>https://repo.micord.ru/repository/maven-public</url>
     </repository>
     <repository>
       <id>mikord</id>
@@ -214,7 +214,7 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-      <url>http://repo.cg.ru/repository/maven-mikord</url>
+      <url>https://repo.micord.ru/repository/maven-mikord</url>
     </repository>
   </repositories>
 
@@ -222,12 +222,12 @@
     <snapshotRepository>
       <id>snapshots</id>
       <name>Repository for storing projects created with Web-BPM 2.x</name>
-      <url>http://repo.cg.ru/repository/libs-snapshots-local</url>
+      <url>https://repo.micord.ru/repository/libs-snapshots-local</url>
     </snapshotRepository>
     <repository>
       <id>mikord</id>
       <name>Repository for storing projects created with Web-BPM 2.x</name>
-      <url>http://repo.cg.ru/repository/libs-releases-local</url>
+      <url>https://repo.micord.ru/repository/libs-releases-local</url>
     </repository>
   </distributionManagement>
 
