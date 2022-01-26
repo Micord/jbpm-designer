@@ -195,8 +195,8 @@
       <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-uploads/</url>
     </repository>
     <repository>
-      <id>central</id>
-      <name>central</name>
+      <id>micord-public</id>
+      <name>micord-public</name>
       <url>https://repo.micord.ru/repository/maven-public</url>
     </repository>
     <repository>
