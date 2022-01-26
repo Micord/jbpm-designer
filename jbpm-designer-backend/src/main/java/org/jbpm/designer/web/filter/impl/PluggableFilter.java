@@ -41,7 +41,7 @@ public class PluggableFilter implements Filter {
     private static List<IFilterFactory> _registeredFilters = new ArrayList<IFilterFactory>();
     private List<Filter> _filters = new ArrayList<Filter>();
     private FilterConfig _filterConfig;
-    
+
     
     public static void registerFilter(IFilterFactory filter) {
         _registeredFilters.add(filter);
@@ -52,6 +52,13 @@ public class PluggableFilter implements Filter {
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String encoding = this._filterConfig.getInitParameter("encoding");
+
+        if (encoding != null) {
+            request.setCharacterEncoding(encoding);
+            response.setCharacterEncoding(encoding);
+        }
+
         if (_filters.size() != _registeredFilters.size()) {
             for (Filter f : _filters) {
                 f.destroy();
