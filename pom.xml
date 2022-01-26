@@ -6,12 +6,12 @@
     <artifactId>kie-parent-with-dependencies</artifactId>
     <version>6.2.0.Final</version>
     <!-- relativePath causes out-of-date problems on hudson slaves -->
-    <!--<relativePath>../droolsjbpm-build-bootstrap/pom.xml</relativePath>-->
+    <!--<relativePath>../droolsjbpm-bubild-bootstrap/pom.xml</relativePath>-->
   </parent>
   <groupId>org.jbpm</groupId>
   <artifactId>jbpm-designer</artifactId>
   <packaging>pom</packaging>
-  <version>6.2.0.Final-Center.22</version>
+  <version>6.2.0.Final-Center.23</version>
 
   <name>jBPM Designer</name>
   <description>jBPM Designer - web-based BPMN2 modeller</description>
