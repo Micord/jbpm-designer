@@ -6,7 +6,7 @@
     <artifactId>kie-parent-with-dependencies</artifactId>
     <version>6.2.0.Final</version>
     <!-- relativePath causes out-of-date problems on hudson slaves -->
-    <!--<relativePath>../droolsjbpm-bubild-bootstrap/pom.xml</relativePath>-->
+    <!--<relativePath>../droolsjbpm-build-bootstrap/pom.xml</relativePath>-->
   </parent>
   <groupId>org.jbpm</groupId>
   <artifactId>jbpm-designer</artifactId>
