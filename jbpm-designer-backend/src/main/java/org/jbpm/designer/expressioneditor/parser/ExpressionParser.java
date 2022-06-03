@@ -162,7 +162,7 @@ public class ExpressionParser {
         ConditionExpression conditionExpression = new ConditionExpression();
         Condition condition = null;
         FunctionDef functionDef = null;
-
+        expression = expression.trim();
         parseSentenceClose();
         parseReturnSentence();
 
@@ -239,7 +239,6 @@ public class ExpressionParser {
 
         parseIndex = index + "return".length();
 
-        //next character after return must be a \n or a " "
         if (!isBlank(expression.charAt(parseIndex))) throw new ParseException(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR, "return"), parseIndex);
 
         expression = expression.substring(parseIndex, expression.length());
