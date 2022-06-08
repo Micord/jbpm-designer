@@ -11,6 +11,7 @@
   <groupId>org.jbpm</groupId>
   <artifactId>jbpm-designer</artifactId>
   <packaging>pom</packaging>
+  <version>7.58.0.Final-Center.7873-SNAPSHOT</version>
 
   <name>jBPM Designer</name>
   <description>jBPM Designer - web-based BPMN2 modeller</description>
@@ -22,37 +23,17 @@
     <url>https://github.com/kiegroup/jbpm-designer</url>
   </scm>
 
-  <properties>
-    <port>8888</port>
-    <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-    <checkstyle.logViolationsToConsole>true</checkstyle.logViolationsToConsole>
-    <spotbugs.failOnViolation>true</spotbugs.failOnViolation>
-    <checkstyle.header.template><![CDATA[
-^\/\*$\n^
-\* Copyright \d\d\d\d Red Hat, Inc\. and\/or its affiliates\.$\n^
-\*$\n^
-\* Licensed under the Apache License, Version 2\.0 \(the &quot;License&quot;\);$\n^
-\* you may not use this file except in compliance with the License\.$\n^
-\* You may obtain a copy of the License at$\n^
-\*$\n^
-\*     http:\/\/www\.apache\.org\/licenses\/LICENSE-2\.0$\n^
-\*$\n^
-\* Unless required by applicable law or agreed to in writing, software$\n^
-\* distributed under the License is distributed on an &quot;AS IS&quot; BASIS,$\n^
-\* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\.$\n^
-\* See the License for the specific language governing permissions and$\n^
-\* limitations under the License\.$\n^
-\*\/$
-]]>
-    </checkstyle.header.template>
-  </properties>
-
   <modules>
     <module>jbpm-designer-api</module>
-    <module>jbpm-designer-backend</module>
     <module>jbpm-designer-client</module>
-    <module>jbpm-designer-utilities</module>
+    <module>jbpm-designer-backend</module>
+    <!--<module>jbpm-designer-standalone</module>-->
   </modules>
+
+  <properties>
+    <port>8888</port>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -159,20 +140,54 @@
 
   <repositories>
     <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
+<!--    <repository>-->
+<!--      <id>jboss-public-repository-group</id>-->
+<!--      <name>JBoss Public Repository Group</name>-->
+<!--      <url>https://repository.jboss.org/nexus/content/groups/public/</url>-->
+<!--      <layout>default</layout>-->
+<!--      <releases>-->
+<!--        <enabled>true</enabled>-->
+<!--        <updatePolicy>never</updatePolicy>-->
+<!--      </releases>-->
+<!--      <snapshots>-->
+<!--        <enabled>true</enabled>-->
+<!--        <updatePolicy>daily</updatePolicy>-->
+<!--      </snapshots>-->
+<!--    </repository>-->
+<!--    <repository>-->
+<!--      <id>jboss-thirdparty-uploads</id>-->
+<!--      <name>JBoss ThirdParty Uploads</name>-->
+<!--      <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-uploads/</url>-->
+<!--    </repository>-->
     <repository>
-      <id>jboss-public-repository-group</id>
-      <name>JBoss Public Repository Group</name>
-      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-      <layout>default</layout>
+      <id>micord-public</id>
+      <name>micord-public</name>
+      <url>https://repo.micord.ru/repository/maven-public</url>
+    </repository>
+    <repository>
+      <id>mikord</id>
+      <name>mikord</name>
       <releases>
         <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
       </releases>
       <snapshots>
         <enabled>true</enabled>
-        <updatePolicy>daily</updatePolicy>
       </snapshots>
+      <url>https://repo.micord.ru/repository/maven-mikord</url>
     </repository>
   </repositories>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>Repository for storing projects created with Web-BPM 2.x</name>
+      <url>https://repo.micord.ru/repository/libs-snapshots-local</url>
+    </snapshotRepository>
+    <repository>
+      <id>mikord</id>
+      <name>Repository for storing projects created with Web-BPM 2.x</name>
+      <url>https://repo.micord.ru/repository/libs-releases-local</url>
+    </repository>
+  </distributionManagement>
 
 </project>
