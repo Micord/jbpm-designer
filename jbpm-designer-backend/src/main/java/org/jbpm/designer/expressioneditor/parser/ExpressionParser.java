@@ -16,15 +16,16 @@
 
 package org.jbpm.designer.expressioneditor.parser;
 
+import org.jbpm.designer.expressioneditor.model.Condition;
+import org.jbpm.designer.expressioneditor.model.ConditionExpression;
+
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jbpm.designer.expressioneditor.model.Condition;
-import org.jbpm.designer.expressioneditor.model.ConditionExpression;
 
 public class ExpressionParser {
 
@@ -35,6 +36,8 @@ public class ExpressionParser {
     private static Map<String, FunctionDef> functionsRegistry = new TreeMap<String, FunctionDef>();
 
     private int parseIndex = 0;
+
+    private int expressionCount = 0;
 
     private String expression;
 
@@ -66,119 +69,82 @@ public class ExpressionParser {
 
         //Operators for all types:
 
-        FunctionDef isNull = new FunctionDef(Condition.IS_NULL);
-        isNull.addParam("param1",
-                        Object.class);
-        functionsRegistry.put(isNull.getName(),
-                              isNull);
+        FunctionDef isNull = new FunctionDef("isNull");
+        isNull.addParam("param1", Object.class);
+        functionsRegistry.put(isNull.getName(), isNull);
 
         //Global operators:
 
-        FunctionDef equalsTo = new FunctionDef(Condition.EQUALS_TO);
-        equalsTo.addParam("param1",
-                          Object.class);
-        equalsTo.addParam("param2",
-                          String.class);
-        functionsRegistry.put(equalsTo.getName(),
-                              equalsTo);
+        FunctionDef equalsTo = new FunctionDef("equalsTo");
+        equalsTo.addParam("param1", Object.class);
+        equalsTo.addParam("param2", String.class);
+        functionsRegistry.put(equalsTo.getName(), equalsTo);
 
         //Operators for String type:
 
-        FunctionDef isEmpty = new FunctionDef(Condition.IS_EMPTY);
-        isEmpty.addParam("param1",
-                         Object.class);
-        functionsRegistry.put(isEmpty.getName(),
-                              isEmpty);
+        FunctionDef isEmpty = new FunctionDef("isEmpty");
+        isEmpty.addParam("param1", Object.class);
+        functionsRegistry.put(isEmpty.getName(), isEmpty);
 
-        FunctionDef contains = new FunctionDef(Condition.CONTAINS);
-        contains.addParam("param1",
-                          Object.class);
-        contains.addParam("param2",
-                          String.class);
-        functionsRegistry.put(contains.getName(),
-                              contains);
+        FunctionDef contains = new FunctionDef("contains");
+        contains.addParam("param1", Object.class);
+        contains.addParam("param2", String.class);
+        functionsRegistry.put(contains.getName(), contains);
 
-        FunctionDef startsWith = new FunctionDef(Condition.STARTS_WITH);
-        startsWith.addParam("param1",
-                            Object.class);
-        startsWith.addParam("param2",
-                            String.class);
-        functionsRegistry.put(startsWith.getName(),
-                              startsWith);
+        FunctionDef startsWith = new FunctionDef("startsWith");
+        startsWith.addParam("param1", Object.class);
+        startsWith.addParam("param2", String.class);
+        functionsRegistry.put(startsWith.getName(), startsWith);
 
-        FunctionDef endsWith = new FunctionDef(Condition.ENDS_WITH);
-        endsWith.addParam("param1",
-                          Object.class);
-        endsWith.addParam("param2",
-                          String.class);
-        functionsRegistry.put(endsWith.getName(),
-                              endsWith);
+        FunctionDef endsWith = new FunctionDef("endsWith");
+        endsWith.addParam("param1", Object.class);
+        endsWith.addParam("param2", String.class);
+        functionsRegistry.put(endsWith.getName(), endsWith);
 
         // Operators for Numeric types:
 
-        FunctionDef greaterThan = new FunctionDef(Condition.GREATER_THAN);
-        greaterThan.addParam("param1",
-                             Object.class);
-        greaterThan.addParam("param2",
-                             String.class);
-        functionsRegistry.put(greaterThan.getName(),
-                              greaterThan);
+        FunctionDef greaterThan = new FunctionDef("greaterThan");
+        greaterThan.addParam("param1", Object.class);
+        greaterThan.addParam("param2", String.class);
+        functionsRegistry.put(greaterThan.getName(), greaterThan);
 
-        FunctionDef greaterOrEqualThan = new FunctionDef(Condition.GREATER_OR_EQUAL_THAN);
-        greaterOrEqualThan.addParam("param1",
-                                    Object.class);
-        greaterOrEqualThan.addParam("param2",
-                                    String.class);
-        functionsRegistry.put(greaterOrEqualThan.getName(),
-                              greaterOrEqualThan);
+        FunctionDef greaterOrEqualThan = new FunctionDef("greaterOrEqualThan");
+        greaterOrEqualThan.addParam("param1", Object.class);
+        greaterOrEqualThan.addParam("param2", String.class);
+        functionsRegistry.put(greaterOrEqualThan.getName(), greaterOrEqualThan);
 
-        FunctionDef lessThan = new FunctionDef(Condition.LESS_THAN);
-        lessThan.addParam("param1",
-                          Object.class);
-        lessThan.addParam("param2",
-                          String.class);
-        functionsRegistry.put(lessThan.getName(),
-                              lessThan);
+        FunctionDef lessThan = new FunctionDef("lessThan");
+        lessThan.addParam("param1", Object.class);
+        lessThan.addParam("param2", String.class);
+        functionsRegistry.put(lessThan.getName(), lessThan);
 
-        FunctionDef lessOrEqualThan = new FunctionDef(Condition.LESS_OR_EQUAL_THAN);
-        lessOrEqualThan.addParam("param1",
-                                 Object.class);
-        lessOrEqualThan.addParam("param2",
-                                 String.class);
-        functionsRegistry.put(lessOrEqualThan.getName(),
-                              lessOrEqualThan);
+        FunctionDef lessOrEqualThan = new FunctionDef("lessOrEqualThan");
+        lessOrEqualThan.addParam("param1", Object.class);
+        lessOrEqualThan.addParam("param2", String.class);
+        functionsRegistry.put(lessOrEqualThan.getName(), lessOrEqualThan);
 
-        FunctionDef between = new FunctionDef(Condition.BETWEEN);
-        between.addParam("param1",
-                         Object.class);
-        between.addParam("param2",
-                         String.class);
-        between.addParam("param3",
-                         String.class);
-        functionsRegistry.put(between.getName(),
-                              between);
+        FunctionDef between = new FunctionDef("between");
+        between.addParam("param1", Object.class);
+        between.addParam("param2", String.class);
+        between.addParam("param3", String.class);
+        functionsRegistry.put(between.getName(), between);
 
         // Operators for Boolean type:
 
-        FunctionDef isTrue = new FunctionDef(Condition.IS_TRUE);
-        isTrue.addParam("param1",
-                        Object.class);
-        functionsRegistry.put(isTrue.getName(),
-                              isTrue);
+        FunctionDef isTrue = new FunctionDef("isTrue");
+        isTrue.addParam("param1", Object.class);
+        functionsRegistry.put(isTrue.getName(), isTrue);
 
-        FunctionDef isFalse = new FunctionDef(Condition.IS_FALSE);
-        isFalse.addParam("param1",
-                         Object.class);
-        functionsRegistry.put(isFalse.getName(),
-                              isFalse);
+
+        FunctionDef isFalse = new FunctionDef("isFalse");
+        isFalse.addParam("param1", Object.class);
+        functionsRegistry.put(isFalse.getName(), isFalse);
 
         StringBuilder functionNamesBuilder = new StringBuilder();
         functionNamesBuilder.append("{");
         boolean first = true;
         for (String functionName : functionsRegistry.keySet()) {
-            if (!first) {
-                functionNamesBuilder.append(", ");
-            }
+            if (!first) functionNamesBuilder.append(", ");
             functionNamesBuilder.append(functionName);
             first = false;
         }
@@ -196,210 +162,173 @@ public class ExpressionParser {
         ConditionExpression conditionExpression = new ConditionExpression();
         Condition condition = null;
         FunctionDef functionDef = null;
-
+        expression = expression.trim();
+        parseSentenceClose();
         parseReturnSentence();
 
-        functionName = parseFunctionName();
-        functionName = functionName.substring(KIE_FUNCTIONS.length(),
-                                              functionName.length());
-        functionDef = functionsRegistry.get(functionName);
+        ArrayList<String> expressionsList = parseExpression();
+        if (!expressionsList.isEmpty()) {
+            for (String expression : expressionsList) {
+                functionName = parseFunctionName(expression);
+                parseIndex = functionName.length();
+                functionName = functionName.substring(KIE_FUNCTIONS.length(), functionName.length());
+                functionDef = functionsRegistry.get(functionName);
 
-        if (functionDef == null) {
-            throw new ParseException(errorMessage(FUNCTION_NAME_NOT_RECOGNIZED_ERROR,
-                                                  functionName),
-                                     parseIndex);
-        }
+                if (functionDef == null)
+                    throw new ParseException(
+                        errorMessage(FUNCTION_NAME_NOT_RECOGNIZED_ERROR, functionName),
+                        parseIndex
+                    );
 
-        conditionExpression.setOperator(ConditionExpression.AND_OPERATOR);
-        condition = new Condition(functionName);
-        conditionExpression.getConditions().add(condition);
+                conditionExpression.setOperator(ConditionExpression.AND_OPERATOR);
+                condition = new Condition(this.functionName);
+                conditionExpression.getConditions().add(condition);
 
-        String param = null;
-        boolean first = true;
+                String param = null;
+                boolean first = true;
 
-        for (ParamDef paramDef : functionDef.getParams()) {
-            if (first) {
-                first = false;
-            } else {
-                parseParamDelimiter();
+                for (ParamDef paramDef : functionDef.getParams()) {
+                    if (first) {
+                        first = false;
+                    }
+                    else {
+                        parseParamDelimiter(expression);
+                    }
+
+                    if (Object.class.getName().equals(paramDef.getType().getName())) {
+                        param = parseVariableName(expression);
+                    }
+                    else {
+                        param = parseStringParameter(expression);
+                    }
+                    condition.addParam(param);
+                }
+                parseFunctionClose(expression);
+                parseIndex = 0;
             }
-
-            if (Object.class.getName().equals(paramDef.getType().getName())) {
-                param = parseVariableName();
-            } else {
-                param = parseStringParameter();
-            }
-            condition.addParam(param);
         }
-
-        //all parameters were consumed
-        parseFunctionClose();
-        parseSentenceClose();
-
-        return conditionExpression;
+       return conditionExpression;
     }
 
-    private String parseReturnSentence() throws ParseException {
-
-        int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR,
-                                                  "return"),
-                                     parseIndex);
-        }
-
-        if (!expression.startsWith("return",
-                                   index)) {
-            //the expression does not start with return.
-            throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR,
-                                                  "return"),
-                                     parseIndex);
-        }
-
-        parseIndex = index + "return".length();
-
-        //next character after return must be a \n or a " "
-        if (!isBlank(expression.charAt(parseIndex))) {
-            throw new ParseException(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR,
-                                                  "return"),
-                                     parseIndex);
-        }
-
-        return "return";
-    }
-
-    private String parseFunctionName() throws ParseException {
-
-        int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR),
-                                     parseIndex);
-        }
+    private String parseFunctionName(String expression) throws ParseException{
+        parseIndex = nextNonBlank(expression);
+        if (parseIndex < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
         String functionName = null;
 
-        if (!expression.startsWith(KIE_FUNCTIONS,
-                                   index)) {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR),
-                                     parseIndex);
-        }
-
-        for (FunctionDef functionDef : functionsRegistry.values()) {
-            if (expression.startsWith(KIE_FUNCTIONS + functionDef.getName() + "(",
-                                      index)) {
-                functionName = KIE_FUNCTIONS + functionDef.getName();
+        for(FunctionDef functionDef : functionsRegistry.values()) {
+            if (expression.startsWith(KIE_FUNCTIONS+functionDef.getName()+"(", parseIndex)) {
+                functionName = KIE_FUNCTIONS+functionDef.getName();
                 break;
             }
         }
 
-        if (functionName == null) {
-            throw new ParseException(errorMessage(VALID_FUNCTION_CALL_NOT_FOUND_ERROR,
-                                                  functionNames()),
-                                     parseIndex);
-        }
-
-        parseIndex = index + functionName.length() + 1;
+        if (functionName == null) throw new ParseException(errorMessage(VALID_FUNCTION_CALL_NOT_FOUND_ERROR, functionNames()), parseIndex);
 
         return functionName;
     }
 
-    private String parseFunctionClose() throws ParseException {
+    private void parseReturnSentence() throws ParseException {
+
         int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR,
-                                                  functionName),
-                                     parseIndex);
+        if (index < 0) throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR, "return"), parseIndex);
+
+        if (!expression.startsWith("return", index)) {
+            //the expression does not start with return.
+            throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR, "return"), parseIndex);
         }
 
-        if (expression.charAt(index) != ')') {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR,
-                                                  functionName),
-                                     parseIndex);
-        }
+        parseIndex = index + "return".length();
 
-        parseIndex = index + 1;
-        return ")";
+        if (!isBlank(expression.charAt(parseIndex))) throw new ParseException(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR, "return"), parseIndex);
+
+        expression = expression.substring(parseIndex, expression.length());
+        parseIndex = 0;
     }
 
-    private String parseSentenceClose() throws ParseException {
+    private ArrayList<String> parseExpression() throws ParseException {
         int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR),
-                                     parseIndex);
-        }
-
-        if (expression.charAt(index) != ';') {
-            throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR),
-                                     parseIndex);
-        }
-
-        parseIndex = index + 1;
-        while (parseIndex < expression.length()) {
-            if (!isBlank(expression.charAt(parseIndex))) {
-                throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR),
-                                         parseIndex);
+        if (index < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
+        expression = expression.trim();
+        ArrayList<String> expressionsList = new ArrayList<String>();
+        if (expression.startsWith(KIE_FUNCTIONS) || expression.startsWith("!" + KIE_FUNCTIONS)) {
+            expressionCount = count(expression, KIE_FUNCTIONS);
+            for (int i = 0; i < expressionCount; i++) {
+                expression = expression.substring(expression.indexOf(KIE_FUNCTIONS));
+                index = endFunctionIndex();
+                String function = expression.substring(parseIndex, index + 1);
+                expressionsList.add(function);
+                expression = expression.substring(index, expression.length());
             }
-            parseIndex++;
         }
-
-        return ";";
+        return expressionsList;
     }
 
-    private String parseVariableName() throws ParseException {
-        int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR),
-                                     parseIndex);
+    private int endFunctionIndex() {
+        if (parseIndex < 0) return -1;
+        for (int i = parseIndex; i < expression.length(); i++) {
+            if (isFunctionEnd(expression.charAt(i))) {
+                return i;
+            }
         }
+
+        return -1;
+    }
+
+    public static int count(String str, String target) {
+        return (str.length() - str.replace(target, "").length()) / target.length();
+    }
+
+    private void parseFunctionClose(String expression) throws ParseException {
+        parseIndex = expression.length() - 1;
+        if (parseIndex < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR, functionName), parseIndex);
+
+        if (expression.charAt(parseIndex) != ')') throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR, functionName), parseIndex);
+    }
+
+    private void parseSentenceClose() throws ParseException {
+        int index = expression.length() - 1;
+        if (index < 0) throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+
+        if (expression.charAt(index) != ';') throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+    }
+
+    private String parseVariableName(String expression) throws ParseException {
+        if (parseIndex < 0) throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
+        parseIndex = parseIndex + 1;
 
         Pattern variableNameParam = Pattern.compile(VARIABLE_NAME_PARAM_REGEX);
-        Matcher variableMatcher = variableNameParam.matcher(expression.substring(index,
-                                                                                 expression.length()));
+        Matcher variableMatcher = variableNameParam.matcher(expression.substring(parseIndex, expression.length()));
 
-        if (!Pattern.matches(VARIABLE_NAME_PARAM_REGEX,
-                             String.valueOf(expression.charAt(index)))) {
-            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR),
-                                     parseIndex);
-        }
+        if (!Pattern.matches(VARIABLE_NAME_PARAM_REGEX, String.valueOf(expression.charAt(parseIndex)))) throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
 
         String variableName = null;
         if (variableMatcher.find()) {
             variableName = variableMatcher.group();
         } else {
-            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR),
-                                     parseIndex);
+            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
         }
-
-        parseIndex = index + variableName.length();
-
+        parseIndex = parseIndex + variableName.length();
         return variableName;
     }
 
-    private String parseParamDelimiter() throws ParseException {
-        int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR),
-                                     parseIndex);
+    private String parseParamDelimiter(String expression) throws ParseException {
+        parseIndex = nextNonBlank(expression);
+        if (parseIndex < 0) throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
+
+        if (expression.charAt(parseIndex) != ',') {
+            throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
         }
 
-        if (expression.charAt(index) != ',') {
-            throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR),
-                                     parseIndex);
-        }
-
-        parseIndex = index + 1;
+        parseIndex = parseIndex + 1;
         return ",";
     }
 
-    private String parseStringParameter() throws ParseException {
-        int index = nextNonBlank();
-        if (index < 0) {
-            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR,
-                                     parseIndex);
-        }
+    private String parseStringParameter(String expression) throws ParseException {
+        parseIndex = nextNonBlank(expression);
+        if (parseIndex < 0) throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
 
-        if (expression.charAt(index) != '"') {
-            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR,
-                                     parseIndex);
+        if (expression.charAt(parseIndex) != '"') {
+            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
         }
 
         int shift = 1;
@@ -407,7 +336,7 @@ public class ExpressionParser {
         Character last = null;
         boolean strReaded = false;
         StringBuilder param = new StringBuilder();
-        for (int i = index + 1; i < expression.length(); i++) {
+        for (int i = parseIndex+1; i < expression.length(); i++) {
             if (expression.charAt(i) == '\\') {
                 if (scapeChar.equals(last)) {
                     shift += 2;
@@ -444,21 +373,29 @@ public class ExpressionParser {
                 shift++;
                 param.append(expression.charAt(i));
             }
+
         }
 
-        if (!strReaded) {
-            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR,
-                                     parseIndex);
-        }
+        if (!strReaded) throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
 
-        parseIndex = index + shift;
+        parseIndex = parseIndex + shift;
         return param.toString();
     }
 
-    private int nextNonBlank() {
-        if (parseIndex < 0) {
-            return -1;
+    private int nextNonBlank(String expression) {
+        if (parseIndex < 0) return -1;
+
+        for (int i = parseIndex; i < expression.length(); i++) {
+            if (!isBlank(expression.charAt(i))) {
+                return i;
+            }
         }
+
+        return -1;
+    }
+
+    private int nextNonBlank() {
+        if (parseIndex < 0) return -1;
 
         for (int i = parseIndex; i < expression.length(); i++) {
             if (!isBlank(expression.charAt(i))) {
@@ -470,9 +407,7 @@ public class ExpressionParser {
     }
 
     private int nextBlank() {
-        if (parseIndex < 0) {
-            return -1;
-        }
+        if (parseIndex < 0) return -1;
 
         for (int i = parseIndex; i < expression.length(); i++) {
             if (isBlank(expression.charAt(i))) {
@@ -483,14 +418,16 @@ public class ExpressionParser {
         return -1;
     }
 
+    private boolean isFunctionEnd(Character character) {
+        return character != null && (character.equals(')'));
+    }
+
     private boolean isBlank(Character character) {
         return character != null && (character.equals('\n') || character.equals(' '));
     }
 
-    private String errorMessage(String message,
-                                Object... params) {
-        return MessageFormat.format(message,
-                                    params);
+    private String errorMessage(String message, Object ... params) {
+        return MessageFormat.format(message, params);
     }
 
     private String functionNames() {
