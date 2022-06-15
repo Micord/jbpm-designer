@@ -36,7 +36,7 @@ public class ExpressionParser {
 
     private static Map<String, FunctionDef> functionsRegistry = new TreeMap<String, FunctionDef>();
 
-    public List<String> errorMessages =  new ArrayList<String>();
+    private List<String> errorMessages =  new ArrayList<String>();
 
     private int parseIndex = 0;
 
