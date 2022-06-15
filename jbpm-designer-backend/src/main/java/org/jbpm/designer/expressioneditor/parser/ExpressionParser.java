@@ -22,6 +22,7 @@ import org.jbpm.designer.expressioneditor.model.ConditionExpression;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -35,7 +36,7 @@ public class ExpressionParser {
 
     private static Map<String, FunctionDef> functionsRegistry = new TreeMap<String, FunctionDef>();
 
-    public ArrayList<String> errorMessages =  new ArrayList<String>();
+    public List<String> errorMessages =  new ArrayList<String>();
 
     private int parseIndex = 0;
 
@@ -159,7 +160,7 @@ public class ExpressionParser {
         this.parseIndex = expression != null ? 0 : -1;
     }
 
-    public ArrayList<String> getErrorMessages() {
+    public List<String> getErrorMessages() {
         return errorMessages;
     }
 
@@ -172,7 +173,7 @@ public class ExpressionParser {
         parseSentenceClose();
         parseReturnSentence();
 
-        ArrayList<String> expressionsList = parseExpression();
+        List<String> expressionsList = parseExpression();
         if (!expressionsList.isEmpty()) {
             for (String expression : expressionsList) {
                 functionName = parseFunctionName(expression);
@@ -257,7 +258,7 @@ public class ExpressionParser {
         parseIndex = 0;
     }
 
-    private ArrayList<String> parseExpression() throws ParseException {
+    private List<String> parseExpression() throws ParseException {
         int index = nextNonBlank();
         if (index < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
         expression = expression.trim();
