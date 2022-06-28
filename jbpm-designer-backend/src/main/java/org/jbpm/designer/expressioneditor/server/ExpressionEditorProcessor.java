@@ -114,6 +114,9 @@ public class ExpressionEditorProcessor {
             ExpressionParser parser = new ExpressionParser(script);
             conditionExpression = parser.parse();
             requestMessage.setExpression(conditionExpression);
+            if (parser.getExpressionCount() > 1) {
+                throw new ParseException("This is custom expression", parser.getParseIndex());
+            }
             requestMessage.setErrorCode(null);
             requestMessage.setErrorMessage(null);
         } catch (ParseException e) {
