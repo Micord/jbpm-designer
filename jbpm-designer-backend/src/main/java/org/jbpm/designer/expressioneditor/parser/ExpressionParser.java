@@ -68,6 +68,14 @@ public class ExpressionParser {
 
     private static String functionNames = null;
 
+    public int getParseIndex() {
+        return parseIndex;
+    }
+
+    public int getExpressionCount() {
+        return expressionCount;
+    }
+
     static {
 
         //Operators for all types:
