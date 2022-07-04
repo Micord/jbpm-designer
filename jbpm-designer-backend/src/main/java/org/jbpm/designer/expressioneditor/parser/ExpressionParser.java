@@ -22,6 +22,7 @@ import org.jbpm.designer.expressioneditor.model.ConditionExpression;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -34,6 +35,8 @@ public class ExpressionParser {
     public static final String KIE_FUNCTIONS = "KieFunctions.";
 
     private static Map<String, FunctionDef> functionsRegistry = new TreeMap<String, FunctionDef>();
+
+    private List<String> errorMessages =  new ArrayList<String>();
 
     private int parseIndex = 0;
 
@@ -49,7 +52,7 @@ public class ExpressionParser {
 
     public static final String VALID_FUNCTION_CALL_NOT_FOUND_ERROR = "The \"" + KIE_FUNCTIONS + "\" keyword must be followed by one of the following function names: \"{0}\"";
 
-    public static final String FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR = "Function call \"{0}\" is not closed properly, character \")\" is expected.";
+    public static final String FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR = "Function call is not closed properly, character \")\" is expected.";
 
     public static final String SENTENCE_NOT_CLOSED_PROPERLY_ERROR = "Script not closed properly, character \";\" is expected.";
 
@@ -59,11 +62,19 @@ public class ExpressionParser {
 
     public static final String STRING_PARAMETER_EXPECTED_ERROR = "String parameter value like \"some value\" is expected.";
 
-    public static final String RETURN_SENTENCE_EXPECTED_ERROR = "Sentence \"{0}\" is expected.";
+    public static final String RETURN_SENTENCE_EXPECTED_ERROR = "Return sentence is expected.";
 
     public static final String BLANK_AFTER_RETURN_EXPECTED_ERROR = "Sentence \"{0}\" must be followed by a blank space or a line break.";
 
     private static String functionNames = null;
+
+    public int getParseIndex() {
+        return parseIndex;
+    }
+
+    public int getExpressionCount() {
+        return expressionCount;
+    }
 
     static {
 
@@ -159,6 +170,10 @@ public class ExpressionParser {
         this.parseIndex = expression != null ? 0 : -1;
     }
 
+    public List<String> getErrorMessages() {
+        return errorMessages;
+    }
+
     public ConditionExpression parse() throws ParseException {
 
         ConditionExpression conditionExpression = new ConditionExpression();
@@ -168,46 +183,50 @@ public class ExpressionParser {
         parseSentenceClose();
         parseReturnSentence();
 
-        ArrayList<String> expressionsList = parseExpression();
+        List<String> expressionsList = parseExpression();
         if (!expressionsList.isEmpty()) {
             for (String expression : expressionsList) {
                 functionName = parseFunctionName(expression);
-                parseIndex = functionName.length();
-                functionName = functionName.substring(KIE_FUNCTIONS.length(), functionName.length());
-                functionDef = functionsRegistry.get(functionName);
+                if (functionName != null) {
+                    parseIndex = functionName.length();
+                    functionName = functionName.substring(KIE_FUNCTIONS.length(), functionName.length());
+                    functionDef = functionsRegistry.get(functionName);
 
-                if (functionDef == null) {
-                    throw new ParseException(
-                        errorMessage(FUNCTION_NAME_NOT_RECOGNIZED_ERROR, functionName),
-                        parseIndex
-                    );
+                    if (functionDef == null) {
+                        throw new ParseException(
+                            errorMessage(FUNCTION_NAME_NOT_RECOGNIZED_ERROR, functionName),
+                            parseIndex
+                        );
+                    }
+
+                    conditionExpression.setOperator(ConditionExpression.AND_OPERATOR);
+                    condition = new Condition(this.functionName);
+                    conditionExpression.getConditions().add(condition);
+
+                    String param = null;
+                    boolean first = true;
+
+                    for (ParamDef paramDef : functionDef.getParams()) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            parseParamDelimiter(expression);
+                        }
+
+                        if (Object.class.getName().equals(paramDef.getType().getName())) {
+                            param = parseVariableName(expression);
+                        }
+                        else {
+                            param = parseStringParameter(expression);
+                        }
+                        if (param != null) {
+                            condition.addParam(param);
+                        }
+                    }
+                    parseFunctionClose(expression);
+                    parseIndex = 0;
                 }
-
-                conditionExpression.setOperator(ConditionExpression.AND_OPERATOR);
-                condition = new Condition(this.functionName);
-                conditionExpression.getConditions().add(condition);
-
-                String param = null;
-                boolean first = true;
-
-                for (ParamDef paramDef : functionDef.getParams()) {
-                    if (first) {
-                        first = false;
-                    }
-                    else {
-                        parseParamDelimiter(expression);
-                    }
-
-                    if (Object.class.getName().equals(paramDef.getType().getName())) {
-                        param = parseVariableName(expression);
-                    }
-                    else {
-                        param = parseStringParameter(expression);
-                    }
-                    condition.addParam(param);
-                }
-                parseFunctionClose(expression);
-                parseIndex = 0;
             }
         }
        return conditionExpression;
@@ -227,9 +246,7 @@ public class ExpressionParser {
             }
         }
 
-        if (functionName == null) {
-            throw new ParseException(errorMessage(VALID_FUNCTION_CALL_NOT_FOUND_ERROR, functionNames()), parseIndex);
-        }
+        if (functionName == null) errorMessages.add(errorMessage(VALID_FUNCTION_CALL_NOT_FOUND_ERROR, functionNames()));
 
         return functionName;
     }
@@ -243,20 +260,20 @@ public class ExpressionParser {
 
         if (!expression.startsWith("return", index)) {
             //the expression does not start with return.
-            throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR, "return"), parseIndex);
-        }
-
-        parseIndex = index + "return".length();
-
-        if (!isBlank(expression.charAt(parseIndex))) {
-            throw new ParseException(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR, "return"), parseIndex);
+            errorMessages.add(RETURN_SENTENCE_EXPECTED_ERROR);
+            if (!expression.startsWith(KIE_FUNCTIONS)) {
+                parseIndex = nextBlank();
+            }
+        } else {
+            parseIndex = index + "return".length();
+            if (!isBlank(expression.charAt(parseIndex))) errorMessages.add(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR,"return"));
         }
 
         expression = expression.substring(parseIndex, expression.length());
         parseIndex = 0;
     }
 
-    private ArrayList<String> parseExpression() throws ParseException {
+    private List<String> parseExpression() throws ParseException {
         int index = nextNonBlank();
         if (index < 0) {
             throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
@@ -266,20 +283,29 @@ public class ExpressionParser {
         if (expression.startsWith(KIE_FUNCTIONS) || expression.startsWith("!" + KIE_FUNCTIONS)) {
             expressionCount = count(expression, KIE_FUNCTIONS);
             for (int i = 0; i < expressionCount; i++) {
-                expression = expression.substring(expression.indexOf(KIE_FUNCTIONS));
-                index = endFunctionIndex();
-                String function = expression.substring(parseIndex, index + 1);
-                expressionsList.add(function);
-                expression = expression.substring(index, expression.length());
+                if (!expression.contains(KIE_FUNCTIONS)) {
+                    errorMessages.add(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
+                    break;
+                } else {
+                    expression = expression.substring(expression.indexOf(KIE_FUNCTIONS));
+                    index = endFunctionIndex();
+                    if (index == -1) {
+                        errorMessages.add(
+                            errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
+                        break;
+                    } else {
+                        String function = expression.substring(parseIndex, index + 1);
+                        expressionsList.add(function);
+                        expression = expression.substring(index, expression.length());
+                    }
+                }
             }
         }
         return expressionsList;
     }
 
     private int endFunctionIndex() {
-        if (parseIndex < 0) {
-            return -1;
-        }
+        if (parseIndex < 0) return -1;
         for (int i = parseIndex; i < expression.length(); i++) {
             if (isFunctionEnd(expression.charAt(i))) {
                 return i;
@@ -296,12 +322,10 @@ public class ExpressionParser {
     private void parseFunctionClose(String expression) throws ParseException {
         parseIndex = expression.length() - 1;
         if (parseIndex < 0) {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR, functionName), parseIndex);
+            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
         }
 
-        if (expression.charAt(parseIndex) != ')') {
-            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR, functionName), parseIndex);
-        }
+        if (expression.charAt(parseIndex) != ')') errorMessages.add(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
     }
 
     private void parseSentenceClose() throws ParseException {
@@ -310,9 +334,7 @@ public class ExpressionParser {
             throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
         }
 
-        if (expression.charAt(index) != ';') {
-            throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
-        }
+        if (expression.charAt(index) != ';') errorMessages.add(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR));
     }
 
     private String parseVariableName(String expression) throws ParseException {
@@ -324,32 +346,30 @@ public class ExpressionParser {
         Pattern variableNameParam = Pattern.compile(VARIABLE_NAME_PARAM_REGEX);
         Matcher variableMatcher = variableNameParam.matcher(expression.substring(parseIndex, expression.length()));
 
-        if (!Pattern.matches(VARIABLE_NAME_PARAM_REGEX, String.valueOf(expression.charAt(parseIndex)))) {
-            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
-        }
+        if (!Pattern.matches(VARIABLE_NAME_PARAM_REGEX, String.valueOf(expression.charAt(parseIndex)))) errorMessages.add(errorMessage(VARIABLE_NAME_EXPECTED_ERROR));
 
         String variableName = null;
         if (variableMatcher.find()) {
             variableName = variableMatcher.group();
+            parseIndex = parseIndex + variableName.length();
+            return variableName;
         } else {
-            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
+            errorMessages.add(errorMessage(VARIABLE_NAME_EXPECTED_ERROR));
+            return null;
         }
-        parseIndex = parseIndex + variableName.length();
-        return variableName;
     }
 
-    private String parseParamDelimiter(String expression) throws ParseException {
+    private void parseParamDelimiter(String expression) throws ParseException {
         parseIndex = nextNonBlank(expression);
         if (parseIndex < 0) {
             throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
         }
 
         if (expression.charAt(parseIndex) != ',') {
-            throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
+           errorMessages.add(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR));
         }
 
         parseIndex = parseIndex + 1;
-        return ",";
     }
 
     private String parseStringParameter(String expression) throws ParseException {
@@ -359,7 +379,7 @@ public class ExpressionParser {
         }
 
         if (expression.charAt(parseIndex) != '"') {
-            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
+            errorMessages.add(errorMessage(STRING_PARAMETER_EXPECTED_ERROR));
         }
 
         int shift = 1;
@@ -407,9 +427,7 @@ public class ExpressionParser {
 
         }
 
-        if (!strReaded) {
-            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
-        }
+        if (!strReaded) errorMessages.add(errorMessage(STRING_PARAMETER_EXPECTED_ERROR));
 
         parseIndex = parseIndex + shift;
         return param.toString();
