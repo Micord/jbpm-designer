@@ -42,10 +42,6 @@ public class ExpressionParser {
 
     private int expressionCount = 0;
 
-    private int negativeExpressionCount = 0;
-
-    private boolean customExpression;
-
     private String expression;
 
     private String functionName = null;
@@ -172,14 +168,11 @@ public class ExpressionParser {
         return errorMessages;
     }
 
-    public boolean isCustomExpression() {
-        return customExpression;
-    }
-
-    private void checkOnCustomExpression() {
-        if (negativeExpressionCount > 0 || expressionCount != 1 || expression.contains("&&") || expression.contains("||")) {
-            this.customExpression = true;
-        }
+    public boolean checkOnCustomExpression(String expression) {
+        int negativeExpressionCount = count(expression, "!" + KIE_FUNCTIONS);
+        int expressionCount = count(expression, KIE_FUNCTIONS);
+        return negativeExpressionCount > 0 || expressionCount != 1 || expression.contains("&&")
+               || expression.contains("||");
     }
 
     public ConditionExpression parse() throws ParseException {
@@ -282,8 +275,6 @@ public class ExpressionParser {
         ArrayList<String> expressionsList = new ArrayList<String>();
         if (expression.startsWith(KIE_FUNCTIONS) || expression.startsWith("!" + KIE_FUNCTIONS)) {
             expressionCount = count(expression, KIE_FUNCTIONS);
-            negativeExpressionCount = count(expression, "!" + KIE_FUNCTIONS);
-            checkOnCustomExpression();
             for (int i = 0; i < expressionCount; i++) {
                 if (!expression.contains(KIE_FUNCTIONS)) {
                     errorMessages.add(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
