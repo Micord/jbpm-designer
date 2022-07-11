@@ -42,6 +42,10 @@ public class ExpressionParser {
 
     private int expressionCount = 0;
 
+    private int negativeExpressionCount = 0;
+
+    private boolean customExpression;
+
     private String expression;
 
     private String functionName = null;
@@ -70,10 +74,6 @@ public class ExpressionParser {
 
     public int getParseIndex() {
         return parseIndex;
-    }
-
-    public int getExpressionCount() {
-        return expressionCount;
     }
 
     static {
@@ -172,6 +172,16 @@ public class ExpressionParser {
         return errorMessages;
     }
 
+    public boolean isCustomExpression() {
+        return customExpression;
+    }
+
+    private void checkOnCustomExpression() {
+        if (negativeExpressionCount > 0 || expressionCount != 1 || expression.contains("&&") || expression.contains("||")) {
+            this.customExpression = true;
+        }
+    }
+
     public ConditionExpression parse() throws ParseException {
 
         ConditionExpression conditionExpression = new ConditionExpression();
@@ -260,10 +270,9 @@ public class ExpressionParser {
         } else {
             parseIndex = index + "return".length();
             if (!isBlank(expression.charAt(parseIndex))) errorMessages.add(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR,"return"));
+            expression = expression.substring(parseIndex, expression.length());
+            parseIndex = 0;
         }
-
-        expression = expression.substring(parseIndex, expression.length());
-        parseIndex = 0;
     }
 
     private List<String> parseExpression() throws ParseException {
@@ -273,6 +282,8 @@ public class ExpressionParser {
         ArrayList<String> expressionsList = new ArrayList<String>();
         if (expression.startsWith(KIE_FUNCTIONS) || expression.startsWith("!" + KIE_FUNCTIONS)) {
             expressionCount = count(expression, KIE_FUNCTIONS);
+            negativeExpressionCount = count(expression, "!" + KIE_FUNCTIONS);
+            checkOnCustomExpression();
             for (int i = 0; i < expressionCount; i++) {
                 if (!expression.contains(KIE_FUNCTIONS)) {
                     errorMessages.add(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
