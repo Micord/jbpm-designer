@@ -11,7 +11,7 @@
   <groupId>org.jbpm</groupId>
   <artifactId>jbpm-designer</artifactId>
   <packaging>pom</packaging>
-  <version>6.2.0.Final-Center.26.2</version>
+  <version>6.2.0.Final-Center.27</version>
 
   <name>jBPM Designer</name>
   <description>jBPM Designer - web-based BPMN2 modeller</description>
@@ -40,7 +40,7 @@
       <dependency>
         <groupId>org.kie.uberfire</groupId>
         <artifactId>i18n-taglib</artifactId>
-        <version>6.3.0-SNAPSHOT</version>
+        <version>6.3.0.Final</version>
       </dependency>
       <dependency>
         <groupId>org.jbpm</groupId>
