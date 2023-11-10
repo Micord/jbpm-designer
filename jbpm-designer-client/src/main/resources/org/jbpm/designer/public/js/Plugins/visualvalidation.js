@@ -11,7 +11,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
         this.errorDisplayView;
         ORYX.IS_VALIDATING_PROCESS = false;
 
-        if(ORYX.READONLY != true) {
+        if(!(ORYX.READONLY == true || ORYX.VIEWLOCKED == true)) {
             this.facade.offer({
                 'name': ORYX.I18N.SyntaxChecker.startValidating,
                 'functionality': this.enableValidation.bind(this),
@@ -22,7 +22,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                 'minShape': 0,
                 'maxShape': 0,
                 'isEnabled': function(){
-                    return !ORYX.IS_VALIDATING_PROCESS && ORYX.READONLY != true;
+                    return !ORYX.IS_VALIDATING_PROCESS && !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true);
                 }
             });
 
@@ -36,7 +36,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                 'minShape': 0,
                 'maxShape': 0,
                 'isEnabled': function(){
-                    return ORYX.IS_VALIDATING_PROCESS && ORYX.READONLY != true;
+                    return ORYX.IS_VALIDATING_PROCESS && !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true);
                 }
             });
 
@@ -50,12 +50,13 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                 'minShape': 0,
                 'maxShape': 0,
                 'isEnabled': function(){
-                    return ORYX.READONLY != true;
+                    return !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true);
                 }
             });
         }
 
         this.facade.registerOnEvent(ORYX.CONFIG.EVENT_CLICK, this.displayErrorsOnNode.bind(this));
+        this.facade.registerOnEvent(ORYX.CONFIG.ORYX.CONFIG.EVENT_DISABLE_VALIDATION, this.disableValidation.bind(this));
 
     },
 
@@ -217,6 +218,8 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
 
 
             if(foundErrorsForNode) {
+                var dialogSize = ORYX.Utils.getDialogSize(300, 700);
+                var singleColWidth = (dialogSize.width - 50) / 7;
                 var grid = new Ext.grid.EditorGridPanel({
                     autoScroll: true,
                     autoHeight: true,
@@ -226,7 +229,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                         {
                             id: 'type',
                             header: ORYX.I18N.SyntaxChecker.header_IssueType,
-                            width: 100,
+                            width: singleColWidth,
                             dataIndex: 'type',
                             sortable  : true,
                             editor: new Ext.form.TextField({ allowBlank: true, vtype: 'inputName', regex: /^[a-z0-9 \-\.\_]*$/i }),
@@ -235,7 +238,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                         {
                             id: 'name',
                             header: ORYX.I18N.SyntaxChecker.header_Description,
-                            width: 500,
+                            width: singleColWidth * 5,
                             dataIndex: 'name',
                             sortable  : true,
                             editor: new Ext.form.TextField({ allowBlank: true, vtype: 'inputName', regex: /^[a-z0-9 \-\.\_]*$/i }),
@@ -244,7 +247,7 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                         {
                             id: 'shapeid',
                             header: ORYX.I18N.SyntaxChecker.header_ShapeId,
-                            width: 100,
+                            width: singleColWidth,
                             dataIndex: 'shapeid',
                             sortable  : true,
                             editor: new Ext.form.TextField({ allowBlank: true, vtype: 'inputName', regex: /^[a-z0-9 \-\.\_]*$/i }),
@@ -260,8 +263,8 @@ ORYX.Plugins.VisualValidation = ORYX.Plugins.AbstractPlugin.extend({
                     layout		: 'anchor',
                     autoCreate	: true,
                     title		: ORYX.I18N.SyntaxChecker.suggestions,
-                    height		: 300,
-                    width		: 700,
+                    height		: dialogSize.height,
+                    width		: dialogSize.width,
                     modal		: true,
                     collapsible	: false,
                     fixedcenter	: true,

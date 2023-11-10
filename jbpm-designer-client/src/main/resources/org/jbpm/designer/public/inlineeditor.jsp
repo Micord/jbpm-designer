@@ -4,7 +4,7 @@
     response.setHeader("Pragma","no-cache");
     response.setDateHeader ("Expires", -1);
 %>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:b3mn="http://b3mn.org/2007/b3mn" xmlns:ext="http://b3mn.org/2007/ext" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:atom="http://b3mn.org/2007/atom+xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head profile="http://purl.org/NET/erdf/profile">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="PRAGMA" content="NO-CACHE">
@@ -21,7 +21,11 @@
     <style xmlns="http://www.w3.org/1999/xhtml" media="screen" type="text/css">@import url("<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/lib/ext-2.0.2/resources/css/ext-all.css");
     .extensive-remove {
         background-image: url(<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/remove.gif) ! important;
-    }</style>
+    }
+    .extensive-install {
+        background-image: url(<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/wrench.png) ! important;
+    }
+    </style>
     <!-- utility scripts -->
     <script xmlns="http://www.w3.org/1999/xhtml" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/compressed/designer-utils.js" type="text/javascript"></script>
 
@@ -46,7 +50,7 @@
     <!-- plugins -->
     <script xmlns="http://www.w3.org/1999/xhtml" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/compressed/designer-plugins.js" type="text/javascript"></script>
     <!-- dynamic properties -->
-    <script xmlns="http://www.w3.org/1999/xhtml" type="text/javascript" src="<%=request.getContextPath()%>/editor/?uuid=<%=request.getParameter("uuid")%>&profile=jbpm&pp=<%=request.getParameter("pp")%>&editorid=<%=request.getParameter("editorid")%>&readonly=false&ts=<%=request.getParameter("ts")%>&studioApiUrl=<%=request.getParameter("studioApiUrl")%>&token=<%=request.getParameter("token")%>&studioClientUrl=<%=request.getParameter("studioClientUrl")%>&procDefId=<%=request.getParameter("procDefId")%>&projectId=<%=request.getParameter("projectId")%>"></script>
+    <script xmlns="http://www.w3.org/1999/xhtml" type="text/javascript" src="<%=request.getContextPath()%>/editor/?uuid=<%=request.getParameter("uuid")%>&profile=<%=request.getParameter("profile")%>&pp=<%=request.getParameter("pp")%>&editorid=<%=request.getParameter("editorid")%>&readonly=<%=request.getParameter("readonly")%>&instanceviewmode=<%=request.getParameter("instanceviewmode")%>&ts=<%=request.getParameter("ts")%>&sessionId=<%=request.getParameter("sessionId")%>"></script>
 
 </head>
 <body style="overflow:hidden;" onload="startit();">
@@ -55,11 +59,5 @@
     <canvas id="canvas" style="width:300px;display:none;"></canvas>
     <script xmlns="http://www.w3.org/1999/xhtml" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/gestures/gesture.js" type="text/javascript"></script>
     -->
-
-    <%--<script>--%>
-        <%--if(parent.document.getElementById(ORYX.EDITORID) && parent.document.getElementById(ORYX.EDITORID).parentNode && parent.document.getElementById(ORYX.EDITORID).parentNode.parentNode) {--%>
-            <%--parent.document.getElementById(ORYX.EDITORID).parentNode.parentNode.style.overflow = 'hidden';--%>
-        <%--}--%>
-    <%--</script>--%>
 </body>
 </html>

@@ -1,11 +1,11 @@
 /*
- * Copyright 2010 JBoss Inc
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * The profile service gives access to profiles.
  * @author Antoine Toulme
- *
  */
 public interface IDiagramProfileService {
 
@@ -32,8 +31,9 @@ public interface IDiagramProfileService {
      * @param name the name of the profile
      * @return the profile with the name in the context of that request
      */
-    public IDiagramProfile findProfile(HttpServletRequest request, String name);
-    
+    public IDiagramProfile findProfile(HttpServletRequest request,
+                                       String name);
+
     /**
      * @param request the context
      * @return the profiles for the given context.

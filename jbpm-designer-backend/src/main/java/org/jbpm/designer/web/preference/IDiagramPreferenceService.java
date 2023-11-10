@@ -1,11 +1,11 @@
 /*
- * Copyright 2010 JBoss Inc
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,15 +20,15 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Xu
  * @author Antoine Toulme
- * 
- * A service for diagram preferences.
- * Creates a preference according to the request object.
+ *         <p>
+ *         A service for diagram preferences.
+ *         Creates a preference according to the request object.
  */
 public interface IDiagramPreferenceService {
-    
+
     /**
      * Creates a IDiagramPreference object according to the request.
-     * @param the current request for the editor
+     * @param req current request for the editor
      * @return a preference object
      */
     public IDiagramPreference createPreference(HttpServletRequest req);

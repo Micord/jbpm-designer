@@ -1,96 +1,376 @@
+/*
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.jbpm.designer.web.preprocessing.impl;
 
-import org.jbpm.designer.repository.RepositoryBaseTest;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.enterprise.event.Event;
+
+import org.guvnor.common.services.project.service.POMService;
+import org.guvnor.common.services.shared.metadata.MetadataService;
+import org.jbpm.designer.helper.TestHttpServletRequest;
+import org.jbpm.designer.helper.TestIDiagramProfile;
+import org.jbpm.designer.helper.TestServletContext;
+import org.jbpm.designer.notification.DesignerWorkitemInstalledEvent;
+import org.jbpm.designer.repository.Asset;
+import org.jbpm.designer.repository.AssetBuilderFactory;
+import org.jbpm.designer.repository.Repository;
+import org.jbpm.designer.repository.RepositoryBaseTest;
+import org.jbpm.designer.repository.filters.FilterByExtension;
+import org.jbpm.designer.repository.impl.AssetBuilder;
+import org.jbpm.designer.repository.vfs.VFSRepository;
+import org.jbpm.designer.server.EditorHandler;
+import org.jbpm.designer.web.server.ServiceRepoUtilsTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.kie.workbench.common.services.shared.project.KieModuleService;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.uberfire.backend.vfs.VFSService;
+import org.uberfire.workbench.events.NotificationEvent;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+@RunWith(MockitoJUnitRunner.class)
 public class JbpmPreprocessingUnitVFSTest extends RepositoryBaseTest {
 
+    @Mock
+    protected Event<DesignerWorkitemInstalledEvent> workitemInstalledEvent;
 
-//    @Before
-//    public void setup() {
-//        new File(REPOSITORY_ROOT).mkdir();
-//        profile = new JbpmProfileImpl();
-//        producer = new VFSFileSystemProducer();
-//        HashMap<String, String> env = new HashMap<String, String>();
-//        env.put("repository.root", VFS_REPOSITORY_ROOT);
-//        env.put("repository.globaldir", "/global");
-//        descriptor = producer.produceFileSystem(env);
-//    }
-//
-//    @After
-//    public void teardown() {
-//        File repo = new File(REPOSITORY_ROOT);
-//        if(repo.exists()) {
-//            deleteFiles(repo);
-//        }
-//        repo.delete();
-//    }
-//    @Test
-//    public void testProprocess() {
-//        Repository repository = new VFSRepository(producer.getIoService());
-//        ((VFSRepository)repository).setDescriptor(descriptor);
-//        profile.setRepository(repository);
-//        //prepare folders that will be used
-//        repository.createDirectory("/myprocesses");
-//        repository.createDirectory("/global");
-//
-//        // prepare process asset that will be used to preprocess
-//        AssetBuilder builder = AssetBuilderFactory.getAssetBuilder(Asset.AssetType.Text);
-//        builder.content("bpmn2 content")
-//                .type("bpmn2")
-//                .name("process")
-//                .location("/myprocesses");
-//        String uniqueId = repository.createAsset(builder.getAsset());
-//
-//        // create instance of preprocessing unit
-//        JbpmPreprocessingUnit preprocessingUnitVFS = new JbpmPreprocessingUnit(new TestServletContext(), "/", null);
-//
-//        // setup parameters
-//        Map<String, String> params = new HashMap<String, String>();
-//        params.put("uuid", uniqueId);
-//
-//        // run preprocess
-//        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params), null, new TestIDiagramProfile(repository), null, false, null, null);
-//
-//        // validate results
-//        Collection<Asset> globalAssets = repository.listAssets("/global");
-//        assertNotNull(globalAssets);
-//        assertEquals(28, globalAssets.size());
-//        repository.assetExists("/global/backboneformsinclude.fw");
-//        repository.assetExists("/global/backbonejsinclude.fw");
-//        repository.assetExists("/global/cancelbutton.fw");
-//        repository.assetExists("/global/checkbox.fw");
-//        repository.assetExists("/global/customeditors.json");
-//        repository.assetExists("/global/div.fw");
-//        repository.assetExists("/global/dropdownmenu.fw");
-//        repository.assetExists("/global/fieldset.fw");
-//        repository.assetExists("/global/form.fw");
-//        repository.assetExists("/global/handlebarsinclude.fw");
-//        repository.assetExists("/global/htmlbasepage.fw");
-//        repository.assetExists("/global/image.fw");
-//        repository.assetExists("/global/jqueryinclude.fw");
-//        repository.assetExists("/global/jquerymobileinclude.fw");
-//        repository.assetExists("/global/link.fw");
-//        repository.assetExists("/global/mobilebasepage.fw");
-//        repository.assetExists("/global/orderedlist.fw");
-//        repository.assetExists("/global/passwordfield.fw");
-//        repository.assetExists("/global/radiobutton.fw");
-//        repository.assetExists("/global/script.fw");
-//        repository.assetExists("/global/submitbutton.fw");
-//        repository.assetExists("/global/table.fw");
-//        repository.assetExists("/global/textarea.fw");
-//        repository.assetExists("/global/textfield.fw");
-//        repository.assetExists("/global/themes.json");
-//        repository.assetExists("/global/unorderedlist.fw");
-//        repository.assetExists("/global/defaultemailicon.gif");
-//        repository.assetExists("/global/defaultlogicon.gif");
-//        repository.assetExists("/global/defaultservicenodeicon.png");
-//
-//        Collection<Asset> defaultStuff = repository.listAssets("/myprocesses");
-//        assertNotNull(defaultStuff);
-//        assertEquals(2, defaultStuff.size());
-//        repository.assetExists("/myprocesses/WorkDefinitions.wid");
-//        // this is the process asset that was created for the test but let's check it anyway
-//        repository.assetExists("/myprocesses/process.bpmn2");
-//
-//    }
+    @Mock
+    protected Event<NotificationEvent> notificationEvent;
+
+    @Mock
+    protected POMService pomService;
+
+    @Mock
+    protected KieModuleService moduleService;
+
+    @Mock
+    protected MetadataService metadataService;
+
+    @Spy
+    @InjectMocks
+    protected JbpmPreprocessingUnit preprocessingUnitVFS = new JbpmPreprocessingUnit();
+
+    protected Repository repository;
+
+    protected String uniqueId;
+
+    protected Map<String, String> params;
+
+    protected String dirName = "myprocesses";
+    protected String processFileName = "process";
+    protected String numberStartFileName = "1process";
+
+    @Before
+    public void setup() {
+        super.setup();
+        preprocessingUnitVFS.workitemInstalledEventEvent = workitemInstalledEvent;
+        preprocessingUnitVFS.notification = notificationEvent;
+
+        repository = new VFSRepository(producer.getIoService());
+        ((VFSRepository) repository).setDescriptor(descriptor);
+        profile.setRepository(repository);
+
+        //prepare folders that will be used
+        repository.createDirectory("/" + dirName);
+        repository.createDirectory("/global");
+
+        // prepare process asset that will be used to preprocess
+        AssetBuilder builder = AssetBuilderFactory.getAssetBuilder(Asset.AssetType.Text);
+        builder.content("bpmn2 content")
+                .type("bpmn2")
+                .name(processFileName)
+                .location("/" + dirName);
+        uniqueId = repository.createAsset(builder.getAsset());
+
+        preprocessingUnitVFS.init(new TestServletContext(),
+                                  "/",
+                                  Mockito.mock(VFSService.class));
+
+        // setup parameters
+        params = new HashMap<String, String>();
+        params.put("uuid",
+                   uniqueId);
+    }
+
+    @After
+    public void teardown() {
+        super.teardown();
+        System.clearProperty(EditorHandler.SERVICE_REPO);
+        System.clearProperty(EditorHandler.SERVICE_REPO_TASKS);
+    }
+
+    @Test
+    public void testPreprocess() {
+
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        // validate results
+        Collection<Asset> globalAssets = repository.listAssets("/global");
+        assertNotNull(globalAssets);
+        assertEquals(10,
+                     globalAssets.size());
+        repository.assetExists("/global/customeditors.json");
+        repository.assetExists("/global/themes.json");
+        repository.assetExists("/global/defaultmilestoneicon.png");
+        repository.assetExists("/global/defaultsubcaseicon.png");
+        repository.assetExists("/global/defaultemailicon.gif");
+        repository.assetExists("/global/defaultlogicon.gif");
+        repository.assetExists("/global/patterns.json");
+        repository.assetExists("/global/defaultservicenodeicon.png");
+        repository.assetExists("/global/defaultbusinessrulesicon.png");
+        repository.assetExists("/global/defaultdecisionicon.png");
+
+        Collection<Asset> defaultStuff = repository.listAssets("/" + dirName);
+        assertNotNull(defaultStuff);
+        assertEquals(2,
+                     defaultStuff.size());
+        repository.assetExists("/" + dirName.replaceAll("\\s",
+                                                        "%20") + "/WorkDefinitions.wid");
+        // this is the process asset that was created for the test but let's check it anyway
+        repository.assetExists("/" + dirName.replaceAll("\\s",
+                                                        "%20") + "/" + processFileName.replaceAll("\\s",
+                                                                                                  "%20") + ".bpmn2");
+    }
+
+    @Test
+    public void testInstallDefaultWids() throws Exception {
+        System.setProperty(EditorHandler.SERVICE_REPO,
+                           ServiceRepoUtilsTest.class.getResource("servicerepo").toURI().toString());
+        System.setProperty(EditorHandler.SERVICE_REPO_TASKS,
+                           "SwitchYardService,Rewardsystem");
+
+        // run preprocess
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        verifyWidsPngsAndGifs(Arrays.asList("/" + dirName + "/WorkDefinitions.wid",
+                                            "/" + dirName + "/SwitchYardService.wid",
+                                            "/" + dirName + "/Rewardsystem.wid"),
+                              Arrays.asList("/" + dirName + "/defaultservicenodeicon.png",
+                                            "/" + dirName + "/defaultmilestoneicon.png",
+                                            "/" + dirName + "/defaultsubcaseicon.png",
+                                            "/" + dirName + "/defaultbusinessrulesicon.png",
+                                            "/" + dirName + "/defaultdecisionicon.png"),
+                              Arrays.asList("/" + dirName + "/switchyard.gif",
+                                            "/" + dirName + "/defaultemailicon.gif",
+                                            "/" + dirName + "/defaultlogicon.gif"));
+
+        Mockito.verify(workitemInstalledEvent,
+                       Mockito.times(2)).fire(Matchers.any(DesignerWorkitemInstalledEvent.class));
+    }
+
+    @Test
+    public void testInstallNoServiceRepo() throws Exception {
+        System.setProperty(EditorHandler.SERVICE_REPO_TASKS,
+                           "SwitchYardService,Rewardsystem");
+
+        // run preprocess
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        verifyWidsPngsAndGifs(Arrays.asList("/" + dirName + "/WorkDefinitions.wid"),
+                              Arrays.asList("/" + dirName + "/defaultservicenodeicon.png",
+                                            "/" + dirName + "/defaultmilestoneicon.png",
+                                            "/" + dirName + "/defaultsubcaseicon.png",
+                                            "/" + dirName + "/defaultbusinessrulesicon.png",
+                                            "/" + dirName + "/defaultdecisionicon.png"),
+                              Arrays.asList("/" + dirName + "/defaultemailicon.gif",
+                                            "/" + dirName + "/defaultlogicon.gif"));
+
+        Mockito.verify(workitemInstalledEvent,
+                       Mockito.never()).fire(Matchers.any(DesignerWorkitemInstalledEvent.class));
+    }
+
+    @Test
+    public void testInstallNoServiceTasks() throws Exception {
+        System.setProperty(EditorHandler.SERVICE_REPO,
+                           ServiceRepoUtilsTest.class.getResource("servicerepo").toURI().toString());
+
+        // run preprocess
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        verifyWidsPngsAndGifs(Arrays.asList("/" + dirName + "/WorkDefinitions.wid"),
+                              Arrays.asList("/" + dirName + "/defaultservicenodeicon.png",
+                                            "/" + dirName + "/defaultmilestoneicon.png",
+                                            "/" + dirName + "/defaultsubcaseicon.png",
+                                            "/" + dirName + "/defaultbusinessrulesicon.png",
+                                            "/" + dirName + "/defaultdecisionicon.png"),
+                              Arrays.asList("/" + dirName + "/defaultemailicon.gif",
+                                            "/" + dirName + "/defaultlogicon.gif"));
+
+        Mockito.verify(workitemInstalledEvent,
+                       Mockito.never()).fire(Matchers.any(DesignerWorkitemInstalledEvent.class));
+    }
+
+    @Test
+    public void testInstallNotExistingTask() throws Exception {
+        System.setProperty(EditorHandler.SERVICE_REPO,
+                           ServiceRepoUtilsTest.class.getResource("servicerepo").toURI().toString());
+        System.setProperty(EditorHandler.SERVICE_REPO_TASKS,
+                           "NonExistingTask");
+
+        // run preprocess
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        verifyWidsPngsAndGifs(Arrays.asList("/" + dirName + "/WorkDefinitions.wid"),
+                              Arrays.asList("/" + dirName + "/defaultservicenodeicon.png",
+                                            "/" + dirName + "/defaultmilestoneicon.png",
+                                            "/" + dirName + "/defaultsubcaseicon.png",
+                                            "/" + dirName + "/defaultbusinessrulesicon.png",
+                                            "/" + dirName + "/defaultdecisionicon.png"),
+                              Arrays.asList("/" + dirName + "/defaultemailicon.gif",
+                                            "/" + dirName + "/defaultlogicon.gif"));
+
+        Mockito.verify(workitemInstalledEvent,
+                       Mockito.never()).fire(Matchers.any(DesignerWorkitemInstalledEvent.class));
+    }
+
+    @Test
+    public void testInstallTwice() throws Exception {
+        System.setProperty(EditorHandler.SERVICE_REPO,
+                           ServiceRepoUtilsTest.class.getResource("servicerepo").toURI().toString());
+        System.setProperty(EditorHandler.SERVICE_REPO_TASKS,
+                           "MicrosoftAcademy");
+
+        // run preprocess twice
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+        preprocessingUnitVFS.preprocess(new TestHttpServletRequest(params),
+                                        null,
+                                        new TestIDiagramProfile(repository),
+                                        null,
+                                        false,
+                                        false,
+                                        null,
+                                        null);
+
+        verifyWidsPngsAndGifs(Arrays.asList("/" + dirName + "/WorkDefinitions.wid",
+                                            "/" + dirName + "/MicrosoftAcademy.wid"),
+                              Arrays.asList("/" + dirName + "/microsoftacademy.png",
+                                            "/" + dirName + "/defaultservicenodeicon.png",
+                                            "/" + dirName + "/defaultmilestoneicon.png",
+                                            "/" + dirName + "/defaultsubcaseicon.png",
+                                            "/" + dirName + "/defaultbusinessrulesicon.png",
+                                            "/" + dirName + "/defaultdecisionicon.png"),
+                              Arrays.asList("/" + dirName + "/defaultemailicon.gif",
+                                            "/" + dirName + "/defaultlogicon.gif"));
+
+        Mockito.verify(workitemInstalledEvent,
+                       Mockito.times(2)).fire(Matchers.any(DesignerWorkitemInstalledEvent.class));
+    }
+
+    @Test
+    public void testProcessIdGeneration() {
+        AssetBuilder builder = AssetBuilderFactory.getAssetBuilder(Asset.AssetType.Text);
+        builder.content("bpmn2 content")
+                .type("bpmn2")
+                .name(numberStartFileName)
+                .location("Evaluation");
+
+        String processId = preprocessingUnitVFS.getProcessIdFromAsset(builder.getAsset());
+
+        assertNotNull(processId);
+        assertEquals("Evaluation.1process", processId);
+    }
+
+    private void verifyWidsPngsAndGifs(List<String> wids,
+                                       List<String> pngs,
+                                       List<String> gifs) {
+        if (wids != null) {
+            Collection<Asset> storedWids = repository.listAssetsRecursively("/",
+                                                                            new FilterByExtension("wid"));
+            assertEquals(wids.size(),
+                         storedWids.size());
+            for (String wid : wids) {
+                repository.assetExists(wid.replaceAll("\\s", "%20"));
+            }
+        }
+
+        if (pngs != null) {
+            Collection<Asset> storedPngs = repository.listAssetsRecursively("/",
+                                                                            new FilterByExtension("png"));
+            assertEquals(pngs.size(),
+                         storedPngs.size());
+            for (String png : pngs) {
+                repository.assetExists(png.replaceAll("\\s", "%20"));
+            }
+        }
+
+        if (gifs != null) {
+            Collection<Asset> storedGifs = repository.listAssetsRecursively("/",
+                                                                            new FilterByExtension("gif"));
+            assertEquals(gifs.size(),
+                         storedGifs.size());
+            for (String gif : gifs) {
+                repository.assetExists(gif.replaceAll("\\s", "%20"));
+            }
+        }
+    }
 }

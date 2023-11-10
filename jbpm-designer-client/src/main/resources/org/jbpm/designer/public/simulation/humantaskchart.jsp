@@ -6,6 +6,7 @@
 <link href="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/css/simulation/simulationcharts.css" rel="stylesheet" type="text/css">
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/d3.v2.min.js"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/nv.min.js"></script>
+<script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/chartutils-min.js"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/lib/handlebars-1.0.0.beta.6.js" type="text/javascript"></script>
 <script>
@@ -20,9 +21,11 @@ function clearChart() {
 <center>
 <div style="margin:20;padding:0;">
 	<!-- <div class="timelineicon"><a href="#" onclick="clearChart(); showTimeline(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/timelineicon.png" title="Timeline"/></a></div> -->
-	<div class="tableicon"><a href="#" onclick="clearChart(); showTables(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/tableicon.png" title="Tables"/></a></div>
-    <div class="hbcharticon"><a href="#" onclick="clearChart(); showBarCharts(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/hbarcharticon.png" title="Bar Charts"/></a></div>
-    <div class="charttitle"><script>document.write(parent.ORYX.EDITOR.simulationChartTitle +  " (" + parent.ORYX.EDITOR.simulationChartNodeName + ")");</script></div>
+	<div class="tableicon"><a href="#" onclick="clearChart(); showTables(); return false;"><img id="tableiconimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/tableicon.png" title="Table"/></a></div>
+	<script>document.getElementById('tableiconimg').title = parent.ORYX.I18N.View.sim.Table;</script>
+	<div class="hbcharticon"><a href="#" onclick="clearChart(); showBarCharts(); return false;"><img id="hbarcharticonimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/hbarcharticon.png" title="Horizontal Bar Chart"/></a></div>
+	<script>document.getElementById('hbarcharticonimg').title = parent.ORYX.I18N.View.sim.HorizontalBarChart;</script>
+	<div class="charttitle"><script>var nodename = parent.ORYX.EDITOR.simulationChartNodeName.replace(/</g,'&lt;').replace(/>/g,'&gt;'); document.write(parent.ORYX.EDITOR.simulationChartTitle +  " (" + nodename + ")");</script></div>
 </div><br/>
 <div class="outterchart">
     <h2><script>document.write(parent.ORYX.I18N.View.sim.chartsExecutionTimes);</script></h2>
@@ -114,6 +117,34 @@ function clearChart() {
 		}
 		function showBarCharts() {
 			var chartData = parent.ORYX.EDITOR.simulationChartData;
+			if(chartData) {
+				if (chartData.costvalues) {
+					var costvalues = chartData.costvalues;
+					costvalues.key = parent.ORYX.I18N.View.sim.chartsResourceCost;
+					if (costvalues.values) {
+						simChartSetMinMaxAvgLabels(costvalues.values, parent.ORYX.I18N);
+					}
+				}
+				if (chartData.resourcevalues) {
+					var resourcevalues = chartData.resourcevalues;
+					resourcevalues.key = parent.ORYX.I18N.View.sim.chartsResourceAllocations;
+					if (resourcevalues.values) {
+						simChartSetMinMaxAvgLabels(resourcevalues.values, parent.ORYX.I18N);
+					}
+				}
+				if (chartData.timevalues && chartData.timevalues.length == 2) {
+					var timevalues = chartData.timevalues;
+					timevalues[0].key = parent.ORYX.I18N.View.sim.chartsExecutionTimes;
+					if (timevalues[0].values) {
+						simChartSetMinMaxAvgLabels(timevalues[0].values, parent.ORYX.I18N);
+					}
+					timevalues[1].key = parent.ORYX.I18N.View.sim.chartsWaitTimes;
+					if (timevalues[1].values) {
+						simChartSetMinMaxAvgLabels(timevalues[1].values, parent.ORYX.I18N);
+					}
+				}
+			}
+
 			nv.addGraph(function() {
 				 var chart = nv.models.multiBarHorizontalChart()
 				 	.x(function(d) { return d.label })
@@ -124,7 +155,7 @@ function clearChart() {
 				 	 .showControls(false);
 				chart.yAxis
 				.tickFormat(d3.format(',.2f'));
-				chart.yAxis.axisLabel('Time (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
+				chart.yAxis.axisLabel(parent.ORYX.I18N.View.sim.chartsExecutionTimesTime + ' (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
 				d3.select('#chart1')
 				.datum(chartData.timevalues)
 				.transition().duration(500)
@@ -144,7 +175,7 @@ function clearChart() {
 				chart.yAxis
 					.tickFormat(d3.format(',.2f'));
 				
-				chart.yAxis.axisLabel('Percentage (%)')
+				chart.yAxis.axisLabel(parent.ORYX.I18N.View.sim.chartsTotalResourceUtilizationPercentages + ' (%)');
 				var dw = [];
 				dw.push(chartData.resourcevalues);
 				d3.select('#chart2')
@@ -168,7 +199,7 @@ function clearChart() {
 				chart.yAxis
 					.tickFormat(d3.format(',.2f'));
 				
-				chart.yAxis.axisLabel('Cost ($)')
+				chart.yAxis.axisLabel(parent.ORYX.I18N.View.sim.chartsTotalCostCost + ' ($)');
 				var dw = [];
 				dw.push(chartData.costvalues);
 				d3.select('#chart3')
@@ -201,7 +232,7 @@ function clearChart() {
 	    	var costTableTemplate = Handlebars.compile(costTableSource);
 	    	$("#chartcontent3").html(costTableTemplate(chartData.costvalues));
 		}
-		
+
 		function showTimeline() {
 			//alert("showing timeline!");
 		}

@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.jbpm</groupId>
     <artifactId>jbpm-designer</artifactId>
-    <version>6.2.0.Final-Center.27</version>
+    <version>7.58.0.Final-Center.7873-SNAPSHOT</version>
   </parent>
 
   <artifactId>jbpm-designer-client</artifactId>
@@ -15,49 +15,115 @@
 
   <name>jBPM Designer - Client</name>
 
+  <properties>
+    <java.module.name>org.jbpm.designer.client</java.module.name>
+  </properties>
+
+  <!--<properties>-->
+    <!--<checkstyle.skip>true</checkstyle.skip>-->
+  <!--</properties>-->
+
   <dependencies>
+
+    <!-- dependencies added because of new illegal transitive dependency check -->
+    <dependency>
+      <groupId>org.gwtbootstrap3</groupId>
+      <artifactId>gwtbootstrap3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-ioc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-security-server</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>javassist</groupId>
+          <artifactId>javassist</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-bus</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-widgets-commons</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.uberfire</groupId>
+       <artifactId>uberfire-widgets-table</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-nio2-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.workbench.services</groupId>
+      <artifactId>kie-wb-common-services-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-backend-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-client-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-workbench-client-views-patternfly</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.jbpm</groupId>
       <artifactId>jbpm-designer-api</artifactId>
     </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>org.uberfire</groupId>-->
-      <!--<artifactId>uberfire-workbench-client</artifactId>-->
-    <!--</dependency>-->
-
-    <!--<dependency>-->
-      <!--<groupId>org.uberfire</groupId>-->
-      <!--<artifactId>uberfire-commons-editor-api</artifactId>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>org.uberfire</groupId>-->
-      <!--<artifactId>uberfire-commons-editor-client</artifactId>-->
-    <!--</dependency>-->
-<!---->
-    <!--<dependency>-->
-      <!--<groupId>org.uberfire</groupId>-->
-      <!--<artifactId>uberfire-workbench-processors</artifactId>-->
-      <!--<scope>provided</scope>-->
-    <!--</dependency>-->
-
     <dependency>
-      <groupId>org.jboss.errai</groupId>
-      <artifactId>errai-bus</artifactId>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-workbench-client</artifactId>
     </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>org.uberfire</groupId>-->
-      <!--<artifactId>uberfire-nio2-model</artifactId>-->
-    <!--</dependency>-->
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.soup</groupId>
+      <artifactId>kie-soup-commons</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-commons-editor-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-commons-editor-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-workbench-processors</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- GWT and GWT Extensions -->
-    <!--<dependency>-->
-      <!--<groupId>com.google.gwt</groupId>-->
-      <!--<artifactId>gwt-user</artifactId>-->
-      <!--<scope>provided</scope>-->
-    <!--</dependency>-->
+    <dependency>
+      <groupId>com.google.gwt</groupId>
+      <artifactId>gwt-user</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -65,61 +131,111 @@
     </dependency>
 
     <!-- Guvnor dependencies -->
-    <!--<dependency>-->
-      <!--<groupId>org.guvnor</groupId>-->
-      <!--<artifactId>guvnor-project-api</artifactId>-->
-    <!--</dependency>-->
-    <!--<dependency>-->
-      <!--<groupId>org.guvnor</groupId>-->
-      <!--<artifactId>guvnor-services-api</artifactId>-->
-    <!--</dependency>-->
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-project-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-project-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-services-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-structure-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-message-console-client</artifactId>
+    </dependency>
 
     <!-- KIE dependencies -->
-    <!--<dependency>-->
-      <!--<groupId>org.kie.workbench.widgets</groupId>-->
-      <!--<artifactId>kie-wb-metadata-widget</artifactId>-->
-    <!--</dependency>-->
+    <dependency>
+      <groupId>org.kie.workbench.widgets</groupId>
+      <artifactId>kie-wb-metadata-widget</artifactId>
+    </dependency>
 
-    <!--<dependency>-->
-      <!--<groupId>org.kie.workbench.widgets</groupId>-->
-      <!--<artifactId>kie-wb-common-ui</artifactId>-->
-    <!--</dependency>-->
+    <dependency>
+      <groupId>org.kie.workbench.widgets</groupId>
+      <artifactId>kie-wb-common-ui</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.workbench.stunner</groupId>
+      <artifactId>kie-wb-common-stunner-jbpm-designer-integration-shared</artifactId>
+    </dependency>
+
+    <!-- Errai  -->
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-data-binding</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-marshalling</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.errai</groupId>
+      <artifactId>errai-ui</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.kie.workbench.profile</groupId>
+      <artifactId>kie-wb-common-profile-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.google.gwt.gwtmockito</groupId>
+      <artifactId>gwtmockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.elemental2</groupId>
+      <artifactId>elemental2-promise</artifactId>
+    </dependency>
+
+    <!-- mocks -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.uberfire</groupId>
+      <artifactId>uberfire-testing-utils</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
-    <resources>
-      <!-- Include src/main/java in order not to break the Eclipse GWT plug-in -->
-      <resource>
-        <directory>src/main/java</directory>
-      </resource>
-      <!-- Include module descriptors from src/main/resources in order not to break the Intellij GWT plug-in -->
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
     <plugins>
 
-      <!-- We need source files generated by our Java Annotations Processor -->
-      <!-- in the resulting JAR for GWT to reference in child projects. Consequentially -->
-      <!-- copy the source files to the target folder before packaging -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-resources</id>
-            <phase>prepare-package</phase>
             <goals>
-              <goal>copy-resources</goal>
+              <goal>jar</goal>
+              <goal>test-jar</goal>
             </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/classes</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>target/generated-sources/annotations</directory>
-                </resource>
-              </resources>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -184,6 +300,7 @@
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Core/abstractDragTracker-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/diff_match_patch-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/itemdeleter-min.js</include>
+                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/workiteminstaller-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/jsonpath-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/imageviewer-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/svgviewer-min.js</include>
@@ -211,6 +328,7 @@
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/cmfold-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/notifications-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/sprite-utils-min.js</include>
+                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/ie-utils-min.js</include>
               </includes>
               <output>${project.build.directory}/classes/org/jbpm/designer/public/js/compressed/designer-utils.js</output>
             </aggregation>
@@ -246,11 +364,11 @@
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/css/fullscreen.css</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/css/mic.css</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/css/notifications.css</include>
-
+ 
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/css/theme-default.css</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/css/xtheme-gray-colors.css</include>
-                <include>${project.build.directory}/classes/org/jbpm/designer/public/css/xtheme-gray.css</include>                
-              </includes>
+                <include>${project.build.directory}/classes/org/jbpm/designer/public/css/xtheme-gray.css</include>
+             </includes>
               <output>${project.build.directory}/classes/org/jbpm/designer/public/css/designer-compressed-stylesheets.css</output>
             </aggregation>
 
@@ -272,10 +390,10 @@
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/selectssperspective-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/toolbar-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/processinfo-min.js</include>
-                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/jpdlmigration-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/servicerepo-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/saveplugin-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/shapemenu-min.js</include>
+                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/dataioeditor-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/shaperepository.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/propertywindow-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/canvasResize-min.js</include>
@@ -291,7 +409,7 @@
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/shapeHighlighting-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/edit-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/keysMove-min.js</include>
-                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/Layouter/edgeLayouter-min.js</include>
+                <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/selectssperspective-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/visualvalidation-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/regexTextEditor-min.js</include>
                 <include>${project.build.directory}/classes/org/jbpm/designer/public/js/Plugins/constraintExpressionEditor-min.js</include>

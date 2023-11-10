@@ -11,48 +11,128 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
     construct: function(facade){
         this.facade = facade;
 
-        if(ORYX.READONLY != true) {
-            // this.facade.offer({
-            //     'name':ORYX.I18N.View.connectServiceRepo,
-            //     'functionality': this.jbpmServiceRepoConnect.bind(this),
-            //     'group': "servicerepogroup",
-            //     'icon': ORYX.BASE_FILE_PATH + "images/repository_rep.gif",
-            //     'description': ORYX.I18N.View.connectServiceRepoDesc,
-            //     'index': 4,
-            //     'minShape': 0,
-            //     'maxShape': 0,
-            //     'isEnabled': function(){
-            //         return ORYX.READONLY != true;
-            //     }.bind(this)
-            // });
+        if(!(ORYX.READONLY == true || ORYX.VIEWLOCKED == true)) {
+            this.facade.offer({
+                'name':ORYX.I18N.View.connectServiceRepo,
+                'functionality': this.jbpmServiceRepoConnect.bind(this),
+                'group': "servicerepogroup",
+                'icon': ORYX.BASE_FILE_PATH + "images/repository_rep.gif",
+                'description': ORYX.I18N.View.connectServiceRepoDesc,
+                'index': 4,
+                'minShape': 0,
+                'maxShape': 0,
+                'isEnabled': function(){
+                    return !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true);
+                }.bind(this)
+            });
         }
+
+        this.facade.registerOnEvent(ORYX.CONFIG.EVENT_INSTALL_WORKITEM, this.installworkitem.bind(this));
     },
+
     jbpmServiceRepoConnect : function() {
         this._showInitialRepoScreen();
     },
+
+    installworkitem : function(event) {
+        ORYX.EDITOR._pluginFacade.raiseEvent({
+            type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+            ntype		: 'info',
+            msg         : ORYX.I18N.View.installingRepoItem,
+            title       : ''
+
+        });
+
+        var aname = event.mn;
+        var acategory = event.cat;
+
+        // send request to server to install the selected service node
+        Ext.Ajax.request({
+            url: ORYX.PATH + 'jbpmservicerepo',
+            method: 'POST',
+            success: function(request) {
+                try {
+                    if(request.responseText == "false") {
+                        ORYX.EDITOR._pluginFacade.raiseEvent({
+                            type: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+                            ntype: 'error',
+                            msg: ORYX.I18N.View.failInstallation,
+                            title: ''
+                        });
+                    } else if(request.responseText == "alreadyinstalled") {
+                        ORYX.EDITOR._pluginFacade.raiseEvent({
+                            type: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+                            ntype: 'info',
+                            msg: ORYX.I18N.View.alreadyInstalled,
+                            title: ''
+                        });
+                    } else {
+                        ORYX.EDITOR._pluginFacade.raiseEvent({
+                            type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+                            ntype		: 'success',
+                            msg         : ORYX.I18N.View.successInstall,
+                            title       : ''
+                        });
+                    }
+                } catch(e) {
+                    ORYX.EDITOR._pluginFacade.raiseEvent({
+                        type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+                        ntype		: 'error',
+                        msg         : ORYX.I18N.View.failAssetsInstallation+': ' + e,
+                        title       : ''
+                    });
+                }
+            }.createDelegate(this),
+            failure: function(){
+                ORYX.EDITOR._pluginFacade.raiseEvent({
+                    type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+                    ntype		: 'error',
+                    msg         : ORYX.I18N.View.failAssetsInstallation+'.',
+                    title       : ''
+                });
+            }.createDelegate(this),
+            params: {
+                action: 'install',
+                profile: ORYX.PROFILE,
+                uuid :  window.btoa(encodeURI(ORYX.UUID)),
+                asset : aname,
+                category : acategory,
+                repourl : this.selectedrepourl
+            }
+        });
+
+    },
+
     _showInitialRepoScreen : function() {
         this.repoContent = new Ext.Panel({
             layout:'table',
             html: '<br/><br/><br/><br/><center>'+ORYX.I18N.View.noServiceSpecified+'</center>'
         });
 
+        var dialogSize = ORYX.Utils.getDialogSize(440, 600);
         var connectToRepo = new Ext.Button({
             text: ORYX.I18N.View.connect,
             handler: function(){
                 var tosaveVal = "";
                 var repoURLsCookieValue = this._readCookie("designerservicerepos");
+                var serviceUrlField = Ext.getCmp('serviceurlfield').getRawValue().replace(/</g,'&lt;').replace(/>/g,'&gt;');
                 if(repoURLsCookieValue != null) {
-                    tosaveVal = repoURLsCookieValue + "," + Ext.getCmp('serviceurlfield').getRawValue();
+                    if(repoURLsCookieValue.indexOf(serviceUrlField) == -1) {
+                        tosaveVal = repoURLsCookieValue + "," + serviceUrlField;
+                    } else {
+                        tosaveVal = repoURLsCookieValue;
+                    }
                 } else {
-                    tosaveVal = Ext.getCmp('serviceurlfield').getRawValue();
+                    tosaveVal = serviceUrlField;
                 }
 
                 this._createCookie("designerservicerepos", tosaveVal, 365);
-                this._updateRepoDialog(Ext.getCmp('serviceurlfield').getRawValue());
-                this.selectedrepourl = Ext.getCmp('serviceurlfield').getRawValue();
+                this._updateRepoDialog(serviceUrlField, dialogSize.width);
+                this.selectedrepourl = serviceUrlField;
             }.bind(this)
         });
 
+        var getRepoComboWidth = dialogSize.width / 2;
         this.repoDialog = new Ext.Window({
             autoCreate: true,
             autoScroll:true,
@@ -60,8 +140,8 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             plain:		true,
             bodyStyle: 	'padding:5px;',
             title: 		ORYX.I18N.View.connectServiceRepoDataTitle,
-            height: 	440,
-            width:		600,
+            height: 	dialogSize.height,
+            width:		dialogSize.width,
             modal:		true,
             fixedcenter:true,
             shadow:		true,
@@ -69,82 +149,10 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             resizable:	true,
             items: 		[this.repoContent],
             tbar: [
-                this._getRepoCombo(),
+                this._getRepoCombo(getRepoComboWidth),
                 connectToRepo
             ],
-            buttons:[{
-                text: "Install selected item",
-                handler: function(){
-                    if(this.mygrid.getSelectionModel().getSelectedCell() != null) {
-                        var selectedIndex = this.mygrid.getSelectionModel().getSelectedCell()[0];
-
-                        ORYX.EDITOR._pluginFacade.raiseEvent({
-                        type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                        ntype		: 'info',
-                        msg         : ORYX.I18N.View.installingRepoItem,
-                        title       : ''
-
-                    });
-
-                    var aname = this.mygrid.getStore().getAt(selectedIndex).get('name');
-                    var acategory = this.mygrid.getStore().getAt(selectedIndex).get('category');
-                    // send request to server to install the selected service node
-                    Ext.Ajax.request({
-                        url: ORYX.PATH + 'jbpmservicerepo',
-                        method: 'POST',
-                        success: function(request) {
-                            try {
-                                if(request.responseText == "false") {
-                                    ORYX.EDITOR._pluginFacade.raiseEvent({
-                                        type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                        ntype		: 'error',
-                                        msg         : ORYX.I18N.View.failInstallation,
-                                        title       : ''
-                                    });
-                                } else {
-                                    ORYX.EDITOR._pluginFacade.raiseEvent({
-                                        type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                        ntype		: 'success',
-                                        msg         : ORYX.I18N.View.successInstall,
-                                        title       : ''
-                                    });
-                                }
-                            } catch(e) {
-                                ORYX.EDITOR._pluginFacade.raiseEvent({
-                                    type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                    ntype		: 'error',
-                                    msg         : ORYX.I18N.View.failAssetsInstallation+': ' + e,
-                                    title       : ''
-                                });
-                            }
-                        }.createDelegate(this),
-                        failure: function(){
-                            ORYX.EDITOR._pluginFacade.raiseEvent({
-                                type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                ntype		: 'error',
-                                msg         : ORYX.I18N.View.failAssetsInstallation+'.',
-                                title       : ''
-                            });
-                        }.createDelegate(this),
-                        params: {
-                            action: 'install',
-                            profile: ORYX.PROFILE,
-                            uuid :  ORYX.UUID,
-                            asset : aname,
-                            category : acategory,
-                            repourl : this.selectedrepourl
-                        }
-                    });
-                    } else {
-                        this.facade.raiseEvent({
-                            type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                            ntype		: 'info',
-                            msg         : ORYX.I18N.LocalHistory.LocalHistoryView.msg,
-                            title       : ''
-                        });
-                    }
-                }.bind(this)
-            },
+            buttons:[
                 {
                     text:ORYX.I18N.jPDLSupport.close,
                     handler:function(){
@@ -165,7 +173,7 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
 
 
     },
-    _getRepoCombo : function() {
+    _getRepoCombo : function(comboWidth) {
         var repoLocationData = new Array();
         var repoLocationStore = new Ext.data.SimpleStore({
             fields: [
@@ -175,6 +183,17 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             data: [[]]
         });
         var repoURLsCookieValue = this._readCookie("designerservicerepos");
+
+        if(ORYX.SERVICE_REPO !== undefined && ORYX.SERVICE_REPO.length > 0) {
+            var defaultRepo = new Array();
+            defaultRepo.push(ORYX.SERVICE_REPO);
+            defaultRepo.push(ORYX.SERVICE_REPO);
+            repoLocationData.push(defaultRepo);
+
+            repoLocationStore.loadData(repoLocationData);
+            repoLocationStore.commitChanges();
+        }
+
         if(repoURLsCookieValue != null) {
             if (repoURLsCookieValue.startsWith(",")) {
                 repoURLsCookieValue = repoURLsCookieValue.substr(1, repoURLsCookieValue.length);
@@ -185,7 +204,7 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             var valueParts = repoURLsCookieValue.split(",");
             for(var i = 0; i < valueParts.length; i++) {
                 var nextPart = valueParts[i];
-                if(nextPart.length >= 0) {
+                if(nextPart.length >= 0 && nextPart != ORYX.SERVICE_REPO) {
                     var nextPartArray = new Array();
                     nextPartArray.push(nextPart);
                     nextPartArray.push(nextPart);
@@ -223,14 +242,14 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             value: "",
             triggerAction: 'all',
             fieldLabel: 'Location',
-            width: 300,
+            width: comboWidth,
             store: repoLocationStore
         });
 
         return repoUrlCombo;
     },
 
-    _updateRepoDialog : function(serviceRepoURL) {
+    _updateRepoDialog : function(serviceRepoURL, dialogWidth) {
         this.facade.raiseEvent({
             type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
             ntype		: 'info',
@@ -271,7 +290,7 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
                             });
                         }
                     } else {
-                        this._showJbpmServiceInfo(request.responseText, serviceRepoURL);
+                        this._showJbpmServiceInfo(request.responseText, serviceRepoURL, dialogWidth);
                     }
                 } catch(e) {
                     if(this.repoDialog) {
@@ -311,12 +330,12 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
             params: {
                 action: 'display',
                 profile: ORYX.PROFILE,
-                uuid :  ORYX.UUID,
+                uuid :  window.btoa(encodeURI(ORYX.UUID)),
                 repourl : serviceRepoURL
             }
         });
     },
-    _showJbpmServiceInfo : function(jsonString, serviceRepoURL) {
+    _showJbpmServiceInfo : function(jsonString, serviceRepoURL, dialogWidth) {
         var jsonObj = jsonString.evalJSON();
 
         var myData = [];
@@ -327,57 +346,68 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
         }
 
         this.mystore = new Ext.data.SimpleStore({
-            fields: [{name: 'name'},
+            fields: [
+                {name: 'name'},
                 {name: 'displayName'},
                 {name: 'icon'},
                 {name: 'category'},
                 {name: 'explanation'},
                 {name: 'documentation'},
                 {name: 'inputparams'},
-                {name: 'results'}
+                {name: 'results'},
+                {name: 'defaulthandler'}
             ],
             data : myData
         });
 
+        var singleColWidth = dialogWidth / 19;
         var gridId = Ext.id();
+        var workiteminstaller = new Extensive.grid.WorkitemInstaller();
         this.mygrid = new Ext.grid.EditorGridPanel({
             autoScroll: true,
             autoHeight: true,
             store: this.mystore,
             id: gridId,
             stripeRows: true,
-            cm: new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
+            selModel: workiteminstaller,
+            cm: new Ext.grid.ColumnModel([
+                workiteminstaller,
                 {
-                    id: 'icon', header: ORYX.I18N.View.headerIcon, width: 50, sortable: true, dataIndex: 'icon', renderer: this._renderIcon
+                    id: 'icon', header: ORYX.I18N.View.headerIcon, width: singleColWidth, sortable: true, dataIndex: 'icon', renderer: this._renderIcon.bind(this)
                 },
                 {
                     id: 'displayName',
-                    header: ORYX.I18N.View.headerName, width: 100, sortable: true, dataIndex: 'displayName',
-                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
-                },
-                {
-                    id: 'explanation',
-                    header: ORYX.I18N.View.headerExplanation, width: 100, sortable: true, dataIndex: 'explanation',
-                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
-                },
-                {
-                    id: 'documentation',
-                    header: ORYX.I18N.View.headerDocumentation, width: 100, sortable: true, dataIndex: 'documentation', renderer: this._renderDocs
-                },
-                {
-                    id: 'inputparams',
-                    header: ORYX.I18N.View.headerInput, width: 200, sortable: true, dataIndex: 'inputparams',
-                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
-                },
-                {
-                    id: 'results',
-                    header: ORYX.I18N.View.headerResults, width: 200, sortable: true, dataIndex: 'results',
+                    header: ORYX.I18N.View.headerName, width: singleColWidth * 2, sortable: true, dataIndex: 'displayName',
                     editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
                 },
                 {
                     id: 'category',
-                    header: ORYX.I18N.View.headerCategory, width: 100, sortable: true, dataIndex: 'category',
+                    header: ORYX.I18N.View.headerCategory, width: singleColWidth * 2, sortable: true, dataIndex: 'category',
                     editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
+                },
+                {
+                    id: 'defaulthandler',
+                    header: ORYX.I18N.View.headerHandler, width: singleColWidth * 2, sortable: true, dataIndex: 'defaulthandler',
+                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
+                },
+                {
+                    id: 'explanation',
+                    header: ORYX.I18N.View.headerExplanation, width: singleColWidth * 2, sortable: true, dataIndex: 'explanation',
+                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
+                },
+                {
+                    id: 'inputparams',
+                    header: ORYX.I18N.View.headerInput, width: singleColWidth * 4, sortable: true, dataIndex: 'inputparams',
+                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
+                },
+                {
+                    id: 'results',
+                    header: ORYX.I18N.View.headerResults, width: singleColWidth * 4, sortable: true, dataIndex: 'results',
+                    editor: new Ext.form.TextField({ allowBlank: true, disabled: true })
+                },
+                {
+                    id: 'documentation',
+                    header: ORYX.I18N.View.headerDocumentation, width: singleColWidth * 2, sortable: true, dataIndex: 'documentation', renderer: this._renderDocs
                 }
             ])
         });
@@ -405,7 +435,11 @@ ORYX.Plugins.ServiceRepoIntegration = Clazz.extend({
         this.repoDialog.doLayout();
     },
     _renderIcon: function(val) {
-        return '<img src="' + val + '"/>';
+        if(this.selectedrepourl.startsWith("file:")) {
+            return '<img src="data:image/png;base64,' + val + '"/>';
+        } else {
+            return '<img src="' + val + '"/>';
+        }
     },
 
     _renderDocs: function(val) {

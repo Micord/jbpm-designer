@@ -84,13 +84,17 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 		// For the Drag and Drop
 		// Register on MouseDown-Event on a Shape
 		this.facade.registerOnEvent(ORYX.CONFIG.EVENT_MOUSEDOWN, this.handleMouseDown.bind(this));
+
+        this.facade.registerOnEvent(ORYX.CONFIG.EVENT_RESIZE_START,  this.hideAllLabelsForCurrent.bind(this));
+        this.facade.registerOnEvent(ORYX.CONFIG.EVENT_RESIZE_END,  this.showAllLabelsForCurrent.bind(this));
 	},
 
 	/**
 	 * On Mouse Down
 	 *
 	 */
-	handleMouseDown: function(event, uiObj) {
+
+    handleMouseDown: function(event, uiObj) {
 		// If the selection Bounds not intialized and the uiObj is not member of current selectio
 		// then return
 		if(!this.dragBounds || !this.currentShapes.member(uiObj) || !this.toMoveShapes.length) {return};
@@ -112,7 +116,7 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 			y: Event.pointerY(event) - (upL.y * this.faktorXY.y)};
 		
 		this.offsetScroll	= {x:this.scrollNode.scrollLeft,y:this.scrollNode.scrollTop};
-			
+
 		// Register on Global Mouse-MOVE Event
 		document.documentElement.addEventListener(ORYX.CONFIG.EVENT_MOUSEMOVE, this.callbackMouseMove, false);	
 		// Register on Global Mouse-UP Event
@@ -126,7 +130,6 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 	 *
 	 */
 	handleMouseUp: function(event) {
-		
 		//disable containment highlighting
 		this.facade.raiseEvent({
 									type:ORYX.CONFIG.EVENT_HIGHLIGHT_HIDE,
@@ -528,7 +531,7 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 	onResize: function(bounds) {
 		// If the selection bounds not initialized, return
 		if(!this.dragBounds) {return}
-		
+
 		this.dragBounds = bounds;
 		this.isResizing = true;
 
@@ -577,6 +580,7 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 				update:function(offset){
 					this.shape.getLabels().each(function(label) {
 						label.changed();
+                        label.show();
 					});
 					
 					var allEdges = [].concat(this.shape.getIncomingShapes())
@@ -618,7 +622,6 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 	 *
 	 */
 	beforeDrag: function(){
-
 		var undockEdgeCommand = ORYX.Core.Command.extend({
 			construct: function(moveShapes){
 				this.dockers = moveShapes.collect(function(shape){ return shape instanceof ORYX.Core.Controls.Docker ? {docker:shape, dockedShape:shape.getDockedShape(), refPoint:shape.referencePoint} : undefined }).compact();
@@ -641,6 +644,28 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 		this._undockedEdgesCommand.execute();	
 		
 	},
+
+    hideAllLabelsForCurrent : function() {
+        ORYX.EDITOR._canvas.getChildren().each((function(child) {
+            this.applyHideLabels(child);
+        }).bind(this));
+    },
+    applyHideLabels : function(shape) {
+        if(shape instanceof ORYX.Core.Node || shape instanceof ORYX.Core.Edge) {
+            shape.getLabels().each(function(label) {
+                label.hide();
+                label.update();
+            });
+        }
+
+        if(shape.getChildren().size() > 0) {
+            for (var i = 0; i < shape.getChildren().size(); i++) {
+                if(shape.getChildren()[i] instanceof ORYX.Core.Node || shape.getChildren()[i] instanceof ORYX.Core.Edge) {
+                    this.applyHideLabels(shape.getChildren()[i]);
+                }
+            }
+        }
+    },
 
 	hideAllLabels: function(shape) {
 			
@@ -673,6 +698,30 @@ ORYX.Plugins.DragDropResize = ORYX.Plugins.AbstractPlugin.extend({
 	afterDrag: function(){
 				
 	},
+
+    showAllLabelsForCurrent : function() {
+        // clear all possible selections
+        document.getSelection().removeAllRanges();
+        ORYX.EDITOR._canvas.getChildren().each((function(child) {
+            this.applyShowLabels(child);
+        }).bind(this));
+    },
+    applyShowLabels : function(shape) {
+        if(shape instanceof ORYX.Core.Node || shape instanceof ORYX.Core.Edge) {
+            shape.getLabels().each(function(label) {
+                label.show();
+                label.update();
+            });
+        }
+
+        if(shape.getChildren().size() > 0) {
+            for (var i = 0; i < shape.getChildren().size(); i++) {
+                if(shape.getChildren()[i] instanceof ORYX.Core.Node || shape.getChildren()[i] instanceof ORYX.Core.Edge) {
+                    this.applyShowLabels(shape.getChildren()[i]);
+                }
+            }
+        }
+    },
 
 	/**
 	 * Show all Labels at these shape
@@ -1385,17 +1434,78 @@ ORYX.Core.Command.Move = ORYX.Core.Command.extend({
 		this.newLocation = newLocation;
 		this.plugin		= plugin;
 		this.doLayout = doLayout;
+		this.newParents = [];
+
+		var xcontainermove = true;
+		var xcontainerparent;
+		var xcontainervalueparent;
+		if(moveShapes.length == 1) {
+			xcontainermove = false;
+		} else {
+			for(var k=0; k<moveShapes.length; k++) {
+				var value = moveShapes[k];
+				if(k == 0) {
+					xcontainerparent = parent;
+					xcontainervalueparent = value.parent;
+				} else {
+					if(!(parent === xcontainerparent && value.parent === xcontainervalueparent)) {
+						xcontainermove = false;
+					}
+				}
+			}
+		}
+
 		// Defines the old/new parents for the particular shape
-		this.newParents	= moveShapes.collect(function(t){ return parent || t.parent });
+		for(var i=0; i<moveShapes.length;i++) {
+			var value = moveShapes[i];
+			if(value.parent instanceof ORYX.Core.Canvas) {
+				this.newParents[i] = parent || value.parent;
+			} else {
+				if(value.parent === parent) {
+					this.newParents[i] = parent || value.parent;
+				} else {
+					if(moveShapes.length == 1) {
+						this.newParents[i] = parent || value.parent;
+					} else {
+						if(parent && parent instanceof ORYX.Core.Canvas) {
+							if(value.parent === parent) {
+								this.newParents[i] = parent;
+							} else {
+								if(!(value.parent instanceof ORYX.Core.Canvas)) {
+									if(xcontainermove) {
+										this.newParents[i] = parent;
+									} else {
+										this.newParents[i] = value.parent;
+									}
+								} else {
+									this.newParents[i] = value.parent;
+								}
+							}
+						} else {
+							if(xcontainermove) {
+								this.newParents[i] = parent || value.parent;
+							} else {
+								if(value.parent !== parent) {
+									this.newParents[i] = value.parent;
+								} else {
+									this.newParents[i] = parent || value.parent;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		this.oldParents	= moveShapes.collect(function(shape){ return shape.parent });
 		this.dockedNodes= moveShapes.findAll(function(shape){ return shape instanceof ORYX.Core.Node && shape.dockers.length == 1}).collect(function(shape){ return {docker:shape.dockers[0], dockedShape:shape.dockers[0].getDockedShape(), refPoint:shape.dockers[0].referencePoint} });
 	},			
 	execute: function(){
-		this.dockAllShapes()				
+		this.dockAllShapes();
 		// Moves by the offset
 		this.move( this.offset, this.newLocation, this.doLayout);
 		// Addes to the new parents
-		this.addShapeToParent( this.newParents ); 
+		this.addShapeToParent( this.newParents );
 		// Set the selection to the current selection
 		this.selectCurrentShapes();
 		if(this.plugin) {
@@ -1423,7 +1533,7 @@ ORYX.Core.Command.Move = ORYX.Core.Command.extend({
 		if(!this.plugin) { return; }
 		// Move all Shapes by these offset
 		for(var i=0; i<this.moveShapes.length ;i++){
-			var value = this.moveShapes[i];		
+			var value = this.moveShapes[i];
 			if (offset) {
 				value.bounds.moveBy(offset);
 			} else {
@@ -1438,7 +1548,7 @@ ORYX.Core.Command.Move = ORYX.Core.Command.extend({
 				})
 				
 				// Update all Dockers of Child shapes
-				/*var childShapesNodes = value.getChildShapes(true).findAll(function(shape){ return shape instanceof ORYX.Core.Node });							
+				var childShapesNodes = value.getChildShapes(true).findAll(function(shape){ return shape instanceof ORYX.Core.Node });
 				var childDockedShapes = childShapesNodes.collect(function(shape){ return shape.getAllDockedShapes() }).flatten().uniq();							
 				var childDockedEdge = childDockedShapes.findAll(function(shape){ return shape instanceof ORYX.Core.Edge });							
 				childDockedEdge = childDockedEdge.findAll(function(shape){ return shape.getAllDockedShapes().all(function(dsh){ return childShapesNodes.include(dsh) }) });							
@@ -1447,10 +1557,10 @@ ORYX.Core.Command.Move = ORYX.Core.Command.extend({
 				for (var j = 0; j < childDockedDockers.length; j++) {
 					var docker = childDockedDockers[j];
 					if (!docker.getDockedShape() && !this.moveShapes.include(docker)) {
-						//docker.bounds.moveBy(offset);
-						//docker.update();
+						docker.bounds.moveBy(offset);
+						docker.update();
 					}
-				}*/
+				}
 				
 				
 				var allEdges = [].concat(value.getIncomingShapes())
@@ -1514,8 +1624,7 @@ ORYX.Core.Command.Move = ORYX.Core.Command.extend({
 	},
 	
 	addShapeToParent:function( parents ){
-		
-		// For every Shape, add this and reset the position		
+		// For every Shape, add this and reset the position
 		for(var i=0; i<this.moveShapes.length ;i++){
 			var currentShape = this.moveShapes[i];
 			if(currentShape instanceof ORYX.Core.Node &&

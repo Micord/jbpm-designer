@@ -29,7 +29,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
 
 	construct: function(facade) {
 		this.facade = facade;
-
+		
 		this.alignGroups = new Hash();
 
 		var containerNode = this.facade.getCanvas().getHTMLContainer();
@@ -45,28 +45,58 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			this.hideMorphMenu();
 		}).bind(this));
 		this.facade.registerOnEvent(ORYX.CONFIG.EVENT_RESIZE_END,  this.showShapeMenu.bind(this));
-
+		
 		// Enable DragZone
 		var DragZone = new Ext.dd.DragZone(containerNode.parentNode, {shadow: !Ext.isMac});
 		DragZone.afterDragDrop = this.afterDragging.bind(this, DragZone);
 		DragZone.beforeDragOver = this.beforeDragOver.bind(this, DragZone);
-
+		
 		// Memory of created Buttons
 		this.createdButtons = {};
-
+		
 		this.facade.registerOnEvent(ORYX.CONFIG.EVENT_STENCIL_SET_LOADED, (function(){ this.registryChanged() }).bind(this));
-
+		
 		this.facade.registerOnEvent(ORYX.CONFIG.VOICE_COMMAND_ADD_TASK, this.addNode.bind(this, "Task"));
 		this.facade.registerOnEvent(ORYX.CONFIG.VOICE_COMMAND_ADD_GATEWAY, this.addNode.bind(this, "Exclusive_Databased_Gateway"));
 		this.facade.registerOnEvent(ORYX.CONFIG.VOICE_COMMAND_ADD_END_EVENT, this.addNode.bind(this, "EndNoneEvent"));
 
+		if(!(ORYX.READONLY == true || ORYX.VIEWLOCKED == true)) {
+			this.facade.offer({
+				keyCodes: [{
+					metaKeys: [ORYX.CONFIG.META_KEY_ALT],
+					keyCode: ORYX.CONFIG.KEY_CODE_P,
+					keyAction: ORYX.CONFIG.KEY_ACTION_DOWN
+				}
+				],
+				functionality: this.handleEditProps.bind(this)
+			});
+
+			this.facade.offer({
+				keyCodes: [{
+					metaKeys: [ORYX.CONFIG.META_KEY_ALT],
+					keyCode: ORYX.CONFIG.KEY_CODE_M,
+					keyAction: ORYX.CONFIG.KEY_ACTION_DOWN
+				}
+				],
+				functionality: this.handleEditMenu.bind(this)
+			});
+		}
+		
 
 		this.timer = null;
-
+		
 		this.resetElements = true;
 
 	},
 
+	handleEditProps : function() {
+		ORYX.EDITOR._handleEditProps();
+	},
+
+	handleEditMenu : function() {
+		ORYX.EDITOR._handleEditMenu();
+	},
+	
 	addNode: function(nodeName) {
 		var option = {type: "http://b3mn.org/stencilset/bpmn2.0#"+nodeName, namespace: "http://b3mn.org/stencilset/bpmn2.0#", connectingType: true};
 		this.newShape(option, undefined);
@@ -79,43 +109,54 @@ ORYX.Plugins.ShapeMenuPlugin = {
 	},
 
 	showShapeMenu: function( dontGenerateNew ) {
-		if( !dontGenerateNew || this.resetElements ){
+		if(!(ORYX.READONLY == true || ORYX.VIEWLOCKED == true)) {
+			if (!dontGenerateNew || this.resetElements) {
 
-			window.clearTimeout(this.timer);
-			this.timer = window.setTimeout(function(){
+				window.clearTimeout(this.timer);
+				this.timer = window.setTimeout(function () {
 
 					// Close all Buttons
-				this.shapeMenu.closeAllButtons();
+					this.shapeMenu.closeAllButtons();
 
-				// Show the Morph Button
-				this.showMorphButton(this.currentShapes);
+					// Show the Morph Button
+					this.showMorphButton(this.currentShapes);
 
-				// Show the dictionary Button
-				this.showDictionaryButton();
+					// Show the documentation Button
+					this.showDocumentationButton();
 
-				// Show the forms Button
-				this.showTaskFormButton();
+					// Show the dictionary Button
+					this.showDictionaryButton();
 
-				// Show the source view button
-				this.showSourceViewButton();
+					// Show the forms Button
+					this.showTaskFormButton();
 
-				// Show the Stencil Buttons
-				this.showStencilButtons(this.currentShapes);
+					// Show the source view button
+					this.showSourceViewButton();
+
+					// Show the DataIOEditor button
+					this.showDataIOEditorButton(this.currentShapes);
+
+					// Show the Stencil Buttons
+					this.showStencilButtons(this.currentShapes);
+
+					// Show the props edit Button
+					this.showPropseditButton();
+
+					// Show the ShapeMenu
+					this.shapeMenu.show(this.currentShapes);
+
+					this.resetElements = false;
+				}.bind(this), 300)
+
+			} else {
+
+				window.clearTimeout(this.timer);
+				this.timer = null;
 
 				// Show the ShapeMenu
 				this.shapeMenu.show(this.currentShapes);
 
-				this.resetElements = false;
-			}.bind(this), 300)
-
-		} else {
-
-			window.clearTimeout(this.timer);
-			this.timer = null;
-
-			// Show the ShapeMenu
-			this.shapeMenu.show(this.currentShapes);
-
+			}
 		}
 	},
 
@@ -125,51 +166,55 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			pluginsData = pluginsData.each(function(value) {value.group = value.group ? value.group : 'unknown'});
 			this.pluginsData = pluginsData.sortBy( function(value) {
 				return (value.group + "" + value.index);
-			});
-		}
-
+			});			
+		}		
+		
 		this.shapeMenu.removeAllButtons();
 		this.shapeMenu.setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_RIGHT, 2);
 		this.createdButtons = {};
-
+		
 		this.createMorphMenu();
-
+		
 		if( !this.pluginsData ){
 			this.pluginsData = [];
 		}
 
 		this.baseMorphStencils = this.facade.getRules().baseMorphs();
-
+		
 		// Checks if the stencil set has morphing attributes
 		var isMorphing = this.facade.getRules().containsMorphingRules();
-
+		
 		// Create Buttons for all Stencils of all loaded stencilsets
 		var stencilsets = this.facade.getStencilSets();
 		stencilsets.values().each((function(stencilSet){
-
+			
 			var nodes = stencilSet.nodes();
 			nodes.each((function(stencil) {
-				if (stencil.hidden()) {
-					return;
+				try {
+                    if (stencil.hidden()) {
+                        return;
+                    }
+                    // Create a button for each node
+                    var option = {type: stencil.id(), namespace: stencil.namespace(), connectingType: true};
+                    var button = new ORYX.Plugins.ShapeMenuButton({
+                        callback: this.newShape.bind(this, option),
+                        icon: stencil.icon(),
+                        align: ORYX.CONFIG.SHAPEMENU_RIGHT,
+                        group: 0,
+                        //dragcallback: this.hideShapeMenu.bind(this),
+                        msg: stencil.title() + " - " + ORYX.I18N.ShapeMenuPlugin.clickDrag
+                    });
+                    // Add button to shape menu
+                    this.shapeMenu.addButton(button);
+                    // Add to the created Button Array
+                    this.createdButtons[stencil.namespace() + stencil.type() + stencil.id()] = button;
+                    // Drag'n'Drop will enable
+                    Ext.dd.Registry.register(button.node.lastChild, option);
+                } catch(e) {
+                    ORYX.Log.warn("Error: " + e + " -- for stencil: " + stencil + " with id: " + stencil.id());
 				}
-				// Create a button for each node
-				var option = {type: stencil.id(), namespace: stencil.namespace(), connectingType: true};
-				var button = new ORYX.Plugins.ShapeMenuButton({
-					callback: 	this.newShape.bind(this, option),
-					icon: 		stencil.icon(),
-					align: 		ORYX.CONFIG.SHAPEMENU_RIGHT,
-					group:		0,
-					//dragcallback: this.hideShapeMenu.bind(this),
-					msg:		stencil.title() + " - " + ORYX.I18N.ShapeMenuPlugin.clickDrag
-					});
-				// Add button to shape menu
-				this.shapeMenu.addButton(button);
-				// Add to the created Button Array
-				this.createdButtons[stencil.namespace() + stencil.type() + stencil.id()] = button;
-				// Drag'n'Drop will enable
-				Ext.dd.Registry.register(button.node.lastChild, option);
 			}).bind(this));
-
+		
 			var edges = stencilSet.edges();
 			edges.each((function(stencil) {
 				// Create a button for each edge
@@ -183,101 +228,132 @@ ORYX.Plugins.ShapeMenuPlugin = {
 					//dragcallback: this.hideShapeMenu.bind(this),
 					msg:		(isMorphing ? ORYX.I18N.Edge : stencil.title()) + " - " + ORYX.I18N.ShapeMenuPlugin.drag
 				});
-
+				
 				// Add button to shape menu
-				this.shapeMenu.addButton(button);
-
+				this.shapeMenu.addButton(button); 
+				
 				// Add to the created Button Array
 				this.createdButtons[stencil.namespace() + stencil.type() + stencil.id()] = button;
-
+				
 				// Drag'n'Drop will enable
 				Ext.dd.Registry.register(button.node.lastChild, option);
-
+				
 			}).bind(this));
-
-		}).bind(this));
-
+		
+		}).bind(this));				
+					
 	},
-
+	
 	createMorphMenu: function() {
 		this.morphMenu = new Ext.menu.Menu({
 			id: 'Oryx_morph_menu',
 			items: []
 		});
-
+		
 		this.morphMenu.on("mouseover", function() {
 			this.morphMenuHovered = true;
 		}, this);
 		this.morphMenu.on("mouseout", function() {
 			this.morphMenuHovered = false;
 		}, this);
-
-
+		
+		
 		// Create the button to show the morph menu
 		var button = new ORYX.Plugins.ShapeMenuButton({
-			hovercallback: 	(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? this.showMorphMenu.bind(this) : undefined),
-			resetcallback: 	(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? this.hideMorphMenu.bind(this) : undefined),
-			callback:		(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? undefined : this.toggleMorphMenu.bind(this)),
+			hovercallback: 	(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? this.showMorphMenu.bind(this) : undefined), 
+			resetcallback: 	(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? this.hideMorphMenu.bind(this) : undefined), 
+			callback:		(ORYX.CONFIG.ENABLE_MORPHMENU_BY_HOVER ? undefined : this.toggleMorphMenu.bind(this)), 
 			icon: 			ORYX.BASE_FILE_PATH + 'images/wrench_orange.png',
 			align: 			ORYX.CONFIG.SHAPEMENU_BOTTOM,
 			group:			0,
 			msg:			ORYX.I18N.ShapeMenuPlugin.morphMsg
 		});
 
-		var dbutton = new ORYX.Plugins.ShapeMenuButton({
-			callback:		this.addDictionaryItem.bind(this),
-			icon: 			ORYX.BASE_FILE_PATH + 'images/dictionary.png',
+		var docbutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.showElementInDocs.bind(this),
+			icon: 			ORYX.BASE_FILE_PATH + 'images/documentation.png',
 			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
 			group:			0,
-			msg:			ORYX.I18N.ShapeMenuPlugin.addTpProcessDic
+			msg:			ORYX.I18N.ShapeMenuPlugin.showInDocs
 		});
 
-		var utfbutton = new ORYX.Plugins.ShapeMenuButton({
-			callback:		this.editTaskForm.bind(this),
-			icon: 			ORYX.BASE_FILE_PATH + 'images/processforms.png',
+		var dbutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.addDictionaryItem.bind(this), 
+			icon: 			ORYX.BASE_FILE_PATH + 'images/dictionary.png',
 			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
 			group:			1,
-			msg:			ORYX.I18N.View.editTaskForm
-		});
-
-		var swbutton = new ORYX.Plugins.ShapeMenuButton({
-			callback:		this.viewNodeSource.bind(this),
-			icon: 			ORYX.BASE_FILE_PATH + 'images/view.png',
+			msg:			ORYX.I18N.ShapeMenuPlugin.addTpProcessDic
+		});	
+		
+		var utfbutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.editTaskForm.bind(this), 
+			icon: 			ORYX.BASE_FILE_PATH + 'images/processforms.png',
 			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
 			group:			2,
+			msg:			ORYX.I18N.View.editTaskForm
+		});
+		
+		var swbutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.viewNodeSource.bind(this), 
+			icon: 			ORYX.BASE_FILE_PATH + 'images/view.png',
+			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
+			group:			3,
 			msg:			ORYX.I18N.ShapeMenuPlugin.viewSourceNode
 		});
 
-		this.shapeMenu.setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_BOTTOM, 2);
-		//this.shapeMenu.setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_TOP, 2)
+		var diobutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.showDataIOEditor.bind(this),
+			icon: 			ORYX.BASE_FILE_PATH + 'images/dataio.png',
+			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
+			group:			4,
+			msg:			ORYX.I18N.ShapeMenuPlugin.editDataIO
+		});
+
+		var propseditbutton = new ORYX.Plugins.ShapeMenuButton({
+			callback:		this.editShapeProps.bind(this),
+			icon: 			ORYX.BASE_FILE_PATH + 'images/editproperties.png',
+			align: 			ORYX.CONFIG.SHAPEMENU_TOP,
+			group:			5,
+			msg:			ORYX.I18N.ShapeMenuPlugin.editProps
+		});
+
+		this.shapeMenu.setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_BOTTOM, 6);
+		this.shapeMenu.setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_TOP, 6);
 		this.shapeMenu.addButton(button);
+		this.shapeMenu.addButton(docbutton);
 		this.shapeMenu.addButton(dbutton);
 		this.shapeMenu.addButton(utfbutton);
 		this.shapeMenu.addButton(swbutton);
+		this.shapeMenu.addButton(diobutton);
+		this.shapeMenu.addButton(propseditbutton);
 		this.morphMenu.getEl().appendTo(button.node);
+
 		this.morphButton = button;
+		this.documentationButton = docbutton;
+		this.propseditButton = propseditbutton;
 		this.dictionaryButton = dbutton;
 		this.taskFormButton = utfbutton;
 		this.sourceViewButton = swbutton;
+		this.dataIOEditorButton = diobutton;
 	},
-
+	
 	showMorphMenu: function() {
 		this.morphMenu.show(this.morphButton.node);
 		this._morphMenuShown = true;
 	},
-
+	
 	hideMorphMenu: function() {
 		this.morphMenu.hide();
 		this._morphMenuShown = false;
 	},
-
+	
 	toggleMorphMenu: function() {
 		if(this._morphMenuShown)
 			this.hideMorphMenu();
 		else
 			this.showMorphMenu();
 	},
-
+	
 	addDictionaryItem: function() {
 		var labelText = "";
 		labelText = this.currentShapes[0].getLabels()[0].text();
@@ -297,27 +373,75 @@ ORYX.Plugins.ShapeMenuPlugin = {
 		}
 	},
 
+	showElementInDocs: function() {
+		var showInDocs = true;
+		if(this.currentShapes[0] instanceof ORYX.Core.Edge) {
+			// condition under which edge is displayed in the generated docs
+			if(!this.currentShapes[0].properties['oryx-name'].length && !this.currentShapes[0].properties['oryx-documentation'].length && !this.currentShapes[0].properties['oryx-conditionexpression'].length) {
+				showInDocs = false;
+			}
+		}
+		if(showInDocs) {
+			ORYX.PROCESSDOC_RESOURCEID = this.currentShapes[0].resourceId;
+			Ext.getCmp('maintabs').setActiveTab(2);
+		} else {
+			this.facade.raiseEvent({
+				type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+				ntype		: 'info',
+				msg         : ORYX.I18N.ShapeMenuPlugin.elementNotIncludedInDoc,
+				title       : ''
+
+			});
+		}
+	},
+
+	editShapeProps: function() {
+		if(this.currentShapes.length==1) {
+			this.facade.raiseEvent({
+				type: ORYX.CONFIG.EVENT_EDIT_PROPS
+			});
+		} else {
+			this.facade.raiseEvent({
+				type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+				ntype		: 'info',
+				msg         : ORYX.I18N.ShapeMenuPlugin.cannotEditPropsOnMultiSelection,
+				title       : ''
+
+			});
+		}
+
+	},
+	
 	editTaskForm: function() {
 		var taskname = this.currentShapes[0].properties['oryx-taskname'];
 		if(taskname && taskname.length > 0) {
             taskname =  taskname.replace(/\&/g, "");
             taskname = taskname.replace(/\s/g, "");
-			this.facade.raiseEvent({
-	            type: ORYX.CONFIG.EVENT_TASKFORM_EDIT,
-	            tn: taskname,
-                taskId: this.currentShapes[0].id
-	        });
+
+			if(/^\w+$/.test(taskname)) {
+				this.facade.raiseEvent({
+					type: ORYX.CONFIG.EVENT_TASKFORM_EDIT,
+					tn: taskname,
+                    taskid : this.currentShapes[0].resourceId
+				});
+			} else {
+				this.facade.raiseEvent({
+					type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+					ntype		: 'error',
+					msg         : ORYX.I18N.forms.failInvalidTaskName,
+					title       : ''
+				});
+			}
 		} else {
             this.facade.raiseEvent({
                 type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
                 ntype		: 'error',
                 msg         : ORYX.I18N.forms.failNoTaskName,
                 title       : ''
-
             });
 		}
 	},
-
+	
 	viewNodeSource: function() {
 		var processJSON = ORYX.EDITOR.getSerializedJSON();
 		Ext.Ajax.request({
@@ -376,38 +500,62 @@ ORYX.Plugins.ShapeMenuPlugin = {
         });
 	},
 
+	showDataIOEditor: function() {
+		this.facade.raiseEvent({
+			type: ORYX.CONFIG.EVENT_DATAIOEDITOR_SHOW,
+			element: this.currentShapes[0]
+		});
+	},
+
+
 	onSelectionChanged: function(event) {
 		var elements = event.elements;
 
 		this.hideShapeMenu();
 		this.hideMorphMenu();
-
+				
 		if( this.currentShapes.inspect() !== elements.inspect() ){
 			this.currentShapes = elements;
 			this.resetElements = true;
-
+			
 			this.showShapeMenu();
 		} else {
 			this.showShapeMenu(true)
 		}
-
+		
 	},
-
+	
 	showDictionaryButton: function() {
 		this.dictionaryButton.prepareToShow();
 	},
 
-	showTaskFormButton : function() {
+	showDocumentationButton: function() {
+		this.documentationButton.prepareToShow();
+	},
+
+	showPropseditButton: function() {
+		// reset group number
+		this.propseditButton.group = 5;
 		if(this.currentShapes && this.currentShapes[0] && this.currentShapes[0].properties && this.currentShapes[0].properties['oryx-tasktype'] &&
+			this.currentShapes[0].properties['oryx-tasktype'] == "User") {
+			this.propseditButton.prepareToShow();
+		} else {
+			this.propseditButton.group = this.propseditButton.group - 1;
+			this.propseditButton.prepareToShow();
+		}
+	},
+
+	showTaskFormButton : function() {
+		if(this.currentShapes && this.currentShapes[0] && this.currentShapes[0].properties && this.currentShapes[0].properties['oryx-tasktype'] && 
 				this.currentShapes[0].properties['oryx-tasktype'] == "User" && ORYX.PRESET_PERSPECTIVE != "ruleflow") {
 			this.taskFormButton.prepareToShow();
 		}
 	},
-
+	
 	showSourceViewButton : function() {
 		// reset group number
-		this.sourceViewButton.group = 2;
-		if(this.currentShapes && this.currentShapes[0] && this.currentShapes[0].properties && this.currentShapes[0].properties['oryx-tasktype'] &&
+		this.sourceViewButton.group = 3;
+		if(this.currentShapes && this.currentShapes[0] && this.currentShapes[0].properties && this.currentShapes[0].properties['oryx-tasktype'] && 
 				this.currentShapes[0].properties['oryx-tasktype'] == "User") {
 			this.sourceViewButton.prepareToShow();
 		} else {
@@ -417,28 +565,52 @@ ORYX.Plugins.ShapeMenuPlugin = {
 	},
 
 	/**
+	 * Show button for editing Data I/O Variables and assignments
+	 *
+	 * @param elements
+	 */
+	showDataIOEditorButton : function(elements) {
+		if(elements.length != 1) return;
+
+		if (! ORYX.DataIOEditorUtils.hasDataIOProperty(elements[0])) {
+			return;
+		}
+
+		// reset group number
+		this.dataIOEditorButton.group = 4;
+		if(this.currentShapes && this.currentShapes[0] && this.currentShapes[0].properties && this.currentShapes[0].properties['oryx-tasktype'] &&
+				this.currentShapes[0].properties['oryx-tasktype'] == "User") {
+			this.dataIOEditorButton.prepareToShow();
+		} else {
+			this.dataIOEditorButton.group = this.dataIOEditorButton.group - 1;
+			this.dataIOEditorButton.prepareToShow();
+		}
+	},
+
+
+	/**
 	 * Show button for morphing the selected shape into another stencil
 	 */
 	showMorphButton: function(elements) {
-
+		
 		if(elements.length != 1) return;
-
+		
 		var possibleMorphs = this.facade.getRules().morphStencils({ stencil: elements[0].getStencil() });
 		possibleMorphs = possibleMorphs.select(function(morph) {
 			if(elements[0].getStencil().type() === "node") {
 				//check containment rules
 				return this.facade.getRules().canContain({containingShape:elements[0].parent, containedStencil:morph});
-			} else {
+			} else { 
 				//check connect rules
 				return this.facade.getRules().canConnect({
-											sourceShape:	elements[0].dockers.first().getDockedShape(),
-											edgeStencil:	morph,
+											sourceShape:	elements[0].dockers.first().getDockedShape(), 
+											edgeStencil:	morph, 
 											targetShape:	elements[0].dockers.last().getDockedShape()
-											});
+											});	
 			}
 		}.bind(this));
 		if(possibleMorphs.size()<=1) return; // if morphing to other stencils is not possible, don't show button
-
+		
 		this.morphMenu.removeAll();
 
         // add task types for tasks
@@ -526,7 +698,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
 		possibleMorphs.each((function(morph) {
             if(!(elements[0].properties["oryx-nomorph"] && elements[0].properties["oryx-nomorph"] == "true")) {
                 var menuItem = new Ext.menu.Item({
-                    text: morph.title(),
+                    text: this.getMorphText(morph),
                     iconCls : window.SpriteUtils.toUniqueId('stencilsets/bpmn2.0jbpm/icons/activity/list/type.script.png'),
                     disabled: morph.id()==elements[0].getStencil().id(),
                     disabledClass: ORYX.CONFIG.MORPHITEM_DISABLED,
@@ -537,7 +709,20 @@ ORYX.Plugins.ShapeMenuPlugin = {
 		}).bind(this));
 
 		this.morphButton.prepareToShow();
+		
+	},
 
+	getMorphText: function(morph) {
+		if (morph.id() !== undefined) {
+			var id = morph.id();
+			if (id.startsWith(morph.namespace())) {
+				id = id.substring(morph.namespace().length, id.length);
+				if (ORYX.I18N.ShapeMenuPlugin[id] !== undefined) {
+					return ORYX.I18N.ShapeMenuPlugin[id];
+				}
+			}
+		}
+		return morph.title();
 	},
 
 	/**
@@ -552,86 +737,86 @@ ORYX.Plugins.ShapeMenuPlugin = {
 
 		// Get all available edges
 		var edges = this.facade.getRules().outgoingEdgeStencils({canvas:this.facade.getCanvas(), sourceShape:elements[0]});
-
+		
 		// And find all targets for each Edge
 		var targets = new Array();
 		var addedEdges = new Array();
-
+		
 		var isMorphing = this.facade.getRules().containsMorphingRules();
-
+		
 		edges.each((function(edge) {
-
+			
 			if (isMorphing){
 				if(this.baseMorphStencils.include(edge)) {
 					var shallAppear = true;
 				} else {
-
+					
 					// if edge is member of a morph groups where none of the base morphs is in the outgoing edges
 					// we want to display the button (but only for the first one)
-
+					
 					var possibleMorphs = this.facade.getRules().morphStencils({ stencil: edge });
-
+					
 					var shallAppear = !possibleMorphs.any((function(morphStencil) {
 						if(this.baseMorphStencils.include(morphStencil) && edges.include(morphStencil)) return true;
 						return addedEdges.include(morphStencil);
 					}).bind(this));
-
+					
 				}
 			}
 			if(shallAppear || !isMorphing) {
-				if(this.createdButtons[edge.namespace() + edge.type() + edge.id()])
+				if(this.createdButtons[edge.namespace() + edge.type() + edge.id()]) 
 					this.createdButtons[edge.namespace() + edge.type() + edge.id()].prepareToShow();
 				addedEdges.push(edge);
 			}
-
+			
 			// get all targets for this edge
 			targets = targets.concat(this.facade.getRules().targetStencils(
 					{canvas:this.facade.getCanvas(), sourceShape:elements[0], edgeStencil:edge}));
 
 		}).bind(this));
-
+		
 		targets.uniq();
-
+		
 		var addedTargets = new Array();
-		// Iterate all possible target
+		// Iterate all possible target 
 		targets.each((function(target) {
-
+			
 			if (isMorphing){
-
+				
 				// continue with next target stencil
-				if (target.type()==="edge") return;
-
+				if (target.type()==="edge") return; 
+				
 				// continue when stencil should not shown in the shape menu
-				if (!this.facade.getRules().showInShapeMenu(target)) return
-
-				// if target is not a base morph
+				if (!this.facade.getRules().showInShapeMenu(target)) return 
+				
+				// if target is not a base morph 
 				if(!this.baseMorphStencils.include(target)) {
-
+					
 					// if target is member of a morph groups where none of the base morphs is in the targets
 					// we want to display the button (but only for the first one)
-
+					
 					var possibleMorphs = this.facade.getRules().morphStencils({ stencil: target });
 					if(possibleMorphs.size()==0) return; // continue with next target
-
+	
 					var baseMorphInTargets = possibleMorphs.any((function(morphStencil) {
 						if(this.baseMorphStencils.include(morphStencil) && targets.include(morphStencil)) return true;
 						return addedTargets.include(morphStencil);
 					}).bind(this));
-
+					
 					if(baseMorphInTargets) return; // continue with next target
 				}
 			}
-
+			
 			// if this is reached the button shall appear in the shape menu:
-			if(this.createdButtons[target.namespace() + target.type() + target.id()])
+			if(this.createdButtons[target.namespace() + target.type() + target.id()]) 
 				this.createdButtons[target.namespace() + target.type() + target.id()].prepareToShow();
 			addedTargets.push(target);
-
+			
 		}).bind(this));
-
+		
 	},
 
-
+	
 	beforeDragOver: function(dragZone, target, event){
 
 		if (this.shapeMenu.isVisible){
@@ -641,18 +826,18 @@ ORYX.Plugins.ShapeMenuPlugin = {
 		var coord = this.facade.eventCoordinates(event.browserEvent);
 		var aShapes = this.facade.getCanvas().getAbstractShapesAtPosition(coord);
 
-		if(aShapes.length <= 0) {return false;}
-
+		if(aShapes.length <= 0) {return false;}	
+		
 		var el = aShapes.last();
-
+		
 		if(this._lastOverElement == el) {
-
+			
 			return false;
-
+			
 		} else {
 			// check containment rules
 			var option = Ext.dd.Registry.getHandle(target.DDM.currentTarget);
-
+			
 			// revert to original options if these were modified
 			if(option.backupOptions) {
 				for(key in option.backupOptions) {
@@ -670,13 +855,13 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			if(stencil.type() === "node") {
 				//check containment rules
 				var canContain = this.facade.getRules().canContain({containingShape:candidate, containedStencil:stencil});
-
+									
 				// if not canContain, try to find a morph which can be contained
 				if(!canContain) {
 					var possibleMorphs = this.facade.getRules().morphStencils({stencil: stencil});
 					for(var i=0; i<possibleMorphs.size(); i++) {
 						canContain = this.facade.getRules().canContain({
-							containingShape:candidate,
+							containingShape:candidate, 
 							containedStencil:possibleMorphs[i]
 						});
 						if(canContain) {
@@ -687,28 +872,28 @@ ORYX.Plugins.ShapeMenuPlugin = {
 						}
 					}
 				}
-
+					
 				this._currentReference = canContain ? candidate : undefined;
-
-
+					
+	
 			} else { //Edge
-
+			
 				var curCan = candidate, orgCan = candidate;
 				var canConnect = false;
 				while(!canConnect && curCan && !(curCan instanceof ORYX.Core.Canvas)){
 					candidate = curCan;
 					//check connection rules
 					canConnect = this.facade.getRules().canConnect({
-											sourceShape: this.currentShapes.first(),
-											edgeStencil: stencil,
+											sourceShape: this.currentShapes.first(), 
+											edgeStencil: stencil, 
 											targetShape: curCan
-											});
+											});	
 					curCan = curCan.parent;
 				}
 
 			 	// if not canConnect, try to find a morph which can be connected
 				if(!canConnect) {
-
+					
 					candidate = orgCan;
 					var possibleMorphs = this.facade.getRules().morphStencils({stencil: stencil});
 					for(var i=0; i<possibleMorphs.size(); i++) {
@@ -718,10 +903,10 @@ ORYX.Plugins.ShapeMenuPlugin = {
 							candidate = curCan;
 							//check connection rules
 							canConnect = this.facade.getRules().canConnect({
-														sourceShape:	this.currentShapes.first(),
-														edgeStencil:	possibleMorphs[i],
+														sourceShape:	this.currentShapes.first(), 
+														edgeStencil:	possibleMorphs[i], 
 														targetShape:	curCan
-													});
+													});	
 							curCan = curCan.parent;
 						}
 						if(canConnect) {
@@ -734,48 +919,48 @@ ORYX.Plugins.ShapeMenuPlugin = {
 						}
 					}
 				}
-
-				this._currentReference = canConnect ? candidate : undefined;
-
+										
+				this._currentReference = canConnect ? candidate : undefined;		
+				
 			}
 
 			this.facade.raiseEvent({
-											type:		ORYX.CONFIG.EVENT_HIGHLIGHT_SHOW,
+											type:		ORYX.CONFIG.EVENT_HIGHLIGHT_SHOW, 
 											highlightId:'shapeMenu',
 											elements:	[candidate],
 											color:		this._currentReference ? ORYX.CONFIG.SELECTION_VALID_COLOR : ORYX.CONFIG.SELECTION_INVALID_COLOR
 										});
-
+												
 			var pr = dragZone.getProxy();
 			pr.setStatus(this._currentReference ? pr.dropAllowed : pr.dropNotAllowed );
 			pr.sync();
-
+										
 		}
-
+		
 		this._lastOverElement = el;
-
+		
 		return false;
-	},
+	},	
 
 	afterDragging: function(dragZone, target, event) {
-
+		
 		if (!(this.currentShapes instanceof Array)||this.currentShapes.length<=0) {
 			return;
 		}
 		var sourceShape = this.currentShapes;
-
+		
 		this._lastOverElement = undefined;
-
+		
 		// Hide the highlighting
 		this.facade.raiseEvent({type: ORYX.CONFIG.EVENT_HIGHLIGHT_HIDE, highlightId:'shapeMenu'});
-
+		
 		// Check if drop is allowed
 		var proxy = dragZone.getProxy()
 		if(proxy.dropStatus == proxy.dropNotAllowed) { return this.facade.updateSelection();}
-
+				
 		// Check if there is a current Parent
 		if(!this._currentReference) { return }
-
+				
 		var option = Ext.dd.Registry.getHandle(target.DDM.currentTarget);
 		option['parent'] = this._currentReference;
 
@@ -794,23 +979,23 @@ ORYX.Plugins.ShapeMenuPlugin = {
 		var parentAbs = this._currentReference.absoluteXY();
 		pos.x -= parentAbs.x;
 		pos.y -= parentAbs.y;
-
-		// If the ctrl key is not pressed,
-		// snapp the new shape to the center
+		
+		// If the ctrl key is not pressed, 
+		// snapp the new shape to the center 
 		// if it is near to the center of the other shape
 		if (!event.ctrlKey){
 			// Get the center of the shape
 			var cShape = this.currentShapes[0].bounds.center();
-			// Snapp +-20 Pixel horizontal to the center
+			// Snapp +-20 Pixel horizontal to the center 
 			if (20 > Math.abs(cShape.x - pos.x)){
 				pos.x = cShape.x;
 			}
-			// Snapp +-20 Pixel vertical to the center
+			// Snapp +-20 Pixel vertical to the center 
 			if (20 > Math.abs(cShape.y - pos.y)){
 				pos.y = cShape.y;
 			}
 		}
-
+				
 		option['position'] = pos;
 		option['connectedShape'] = this.currentShapes[0];
 		if(option['connectingType']) {
@@ -819,30 +1004,30 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			var args = { sourceShape: this.currentShapes[0], targetStencil: containedStencil };
 			option['connectingType'] = this.facade.getRules().connectMorph(args).id();
 		}
-
+		
 		if (ORYX.CONFIG.SHAPEMENU_DISABLE_CONNECTED_EDGE===true) {
 			delete option['connectingType'];
 		}
-
+			
 		var command = new ORYX.Plugins.ShapeMenuPlugin.CreateCommand(Object.clone(option), this._currentReference, pos, this);
 		var newShape = this.facade.executeCommands([command]);
         this.facade.raiseEvent({
             type: ORYX.CONFIG.EVENT_SHAPE_ADDED,
             shape: newShape
         });
-
-		// Inform about completed Drag
+		
+		// Inform about completed Drag 
 		this.facade.raiseEvent({type: ORYX.CONFIG.EVENT_SHAPE_MENU_CLOSE, source:sourceShape, destination:this.currentShapes});
-
+		
 		// revert to original options if these were modified
 		if(option.backupOptions) {
 			for(key in option.backupOptions) {
 				option[key] = option.backupOptions[key];
 			}
 			delete option.backupOptions;
-		}
-
-		this._currentReference = undefined;
+		}	
+		
+		this._currentReference = undefined;		
 	},
 
 	newShape: function(option, event) {
@@ -857,7 +1042,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			option['connectedShape'] = this.currentShapes[0];
 			option['parent'] = this.currentShapes.first().parent;
 			option['containedStencil'] = containedStencil;
-
+		
 			var args = { sourceShape: this.currentShapes[0], targetStencil: containedStencil };
 			var targetStencil = this.facade.getRules().connectMorph(args);
 			if (!targetStencil){ return }// Check if there can be a target shape
@@ -866,9 +1051,9 @@ ORYX.Plugins.ShapeMenuPlugin = {
 			if (ORYX.CONFIG.SHAPEMENU_DISABLE_CONNECTED_EDGE===true) {
 				delete option['connectingType'];
 			}
-
+			
 			var command = new ORYX.Plugins.ShapeMenuPlugin.CreateCommand(option, undefined, undefined, this);
-
+		
 			var newShape = this.facade.executeCommands([command]);
             this.facade.raiseEvent({
                 type: ORYX.CONFIG.EVENT_SHAPE_ADDED,
@@ -893,9 +1078,13 @@ ORYX.Plugins.ShapeMenuPlugin = {
                 type: ORYX.CONFIG.EVENT_LOADED,
                 elements: [shape]
             });
+
+			this.facade.raiseEvent({
+				type: ORYX.CONFIG.EVENT_UPDATE_TASK_TYPE
+			});
         }
     },
-
+	
 	/**
 	 * Morph a shape to a new stencil
 	 * {Command implemented}
@@ -910,11 +1099,11 @@ ORYX.Plugins.ShapeMenuPlugin = {
 				this.facade = facade;
 			},
 			execute: function(){
-
+				
 				var shape = this.shape;
 				var stencil = this.stencil;
 				var resourceId = shape.resourceId;
-
+				
 				// Serialize all attributes
 				var serialized = shape.serialize();
 				stencil.properties().each((function(prop) {
@@ -927,7 +1116,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
 						});
 					}
 				}).bind(this));
-
+				
 				// Get shape if already created, otherwise create a new shape
 				if (this.newShape){
 					newShape = this.newShape;
@@ -939,16 +1128,16 @@ ORYX.Plugins.ShapeMenuPlugin = {
 									resourceId: resourceId
 								});
 				}
-
+				
 				// calculate new bounds using old shape's upperLeft and new shape's width/height
 				var boundsObj = serialized.find(function(serProp){
 					return (serProp.prefix === "oryx" && serProp.name === "bounds");
 				});
-
+				
 				var changedBounds = null;
-
+				
 				if(!this.facade.getRules().preserveBounds(shape.getStencil())) {
-
+					
 					var bounds = boundsObj.value.split(",");
 					if (parseInt(bounds[0], 10) > parseInt(bounds[2], 10)) { // if lowerRight comes first, swap array items
 						var tmp = bounds[0];
@@ -961,36 +1150,36 @@ ORYX.Plugins.ShapeMenuPlugin = {
 					bounds[2] = parseInt(bounds[0], 10) + newShape.bounds.width();
 					bounds[3] = parseInt(bounds[1], 10) + newShape.bounds.height();
 					boundsObj.value = bounds.join(",");
-
+					
 				}  else {
-
+					
 					var height = shape.bounds.height();
 					var width  = shape.bounds.width();
-
+					
 					// consider the minimum and maximum size of
 					// the new shape
-
+					
 					if (newShape.minimumSize) {
 						if (shape.bounds.height() < newShape.minimumSize.height) {
 							height = newShape.minimumSize.height;
 						}
-
-
+						
+						
 						if (shape.bounds.width() < newShape.minimumSize.width) {
 							width = newShape.minimumSize.width;
 						}
 					}
-
+					
 					if(newShape.maximumSize) {
 						if(shape.bounds.height() > newShape.maximumSize.height) {
 							height = newShape.maximumSize.height;
-						}
-
+						}	
+						
 						if(shape.bounds.width() > newShape.maximumSize.width) {
 							width = newShape.maximumSize.width;
 						}
 					}
-
+					
 					changedBounds = {
 						a : {
 							x: shape.bounds.a.x,
@@ -999,33 +1188,33 @@ ORYX.Plugins.ShapeMenuPlugin = {
 						b : {
 							x: shape.bounds.a.x + width,
 							y: shape.bounds.a.y + height
-						}
+						}						
 					};
-
+					
 				}
-
+				
 				var oPos = shape.bounds.center();
 				if(changedBounds !== null) {
 					newShape.bounds.set(changedBounds);
 				}
-
+				
 				// Set all related dockers
 				this.setRelatedDockers(shape, newShape);
-
+				
 				// store DOM position of old shape
 				var parentNode = shape.node.parentNode;
 				var nextSibling = shape.node.nextSibling;
-
+				
 				// Delete the old shape
 				this.facade.deleteShape(shape);
-
+				
 				// Deserialize the new shape - Set all attributes
 				newShape.deserialize(serialized);
 				/*
 				 * Change color to default if unchanged
 				 * 23.04.2010
 				 */
-				if(shape.getStencil().property("oryx-bgcolor")
+				if(shape.getStencil().property("oryx-bgcolor") 
 						&& shape.properties["oryx-bgcolor"]
 						&& shape.getStencil().property("oryx-bgcolor").value().toUpperCase()== shape.properties["oryx-bgcolor"].toUpperCase()){
 						if(newShape.getStencil().property("oryx-bgcolor")){
@@ -1036,31 +1225,31 @@ ORYX.Plugins.ShapeMenuPlugin = {
 				if(changedBounds !== null) {
 					newShape.bounds.set(changedBounds);
 				}
-
+				
 				if(newShape.getStencil().type()==="edge" || (newShape.dockers.length==0 || !newShape.dockers[0].getDockedShape())) {
 					newShape.bounds.centerMoveTo(oPos);
-				}
-
+				} 
+				
 				if(newShape.getStencil().type()==="node" && (newShape.dockers.length==0 || !newShape.dockers[0].getDockedShape())) {
 					this.setRelatedDockers(newShape, newShape);
-
+					
 				}
-
+				
 				// place at the DOM position of the old shape
 				if(nextSibling) parentNode.insertBefore(newShape.node, nextSibling);
 				else parentNode.appendChild(newShape.node);
-
+				
 				// Set selection
 				this.facade.setSelection([newShape]);
 				this.facade.getCanvas().update();
 				this.facade.updateSelection();
 				this.newShape = newShape;
-
+				
 			},
 			rollback: function(){
-
+				
 				if (!this.shape || !this.newShape || !this.newShape.parent) {return}
-
+				
 				// Append shape to the parent
 				this.newShape.parent.add(this.shape);
 				// Set dockers
@@ -1073,18 +1262,18 @@ ORYX.Plugins.ShapeMenuPlugin = {
 				this.facade.getCanvas().update();
 				this.facade.updateSelection();
 			},
-
+			
 			/**
 			 * Set all incoming and outgoing edges from the shape to the new shape
 			 * @param {Shape} shape
 			 * @param {Shape} newShape
 			 */
 			setRelatedDockers: function(shape, newShape){
-
+				
 				if(shape.getStencil().type()==="node") {
-
+					
 					(shape.incoming||[]).concat(shape.outgoing||[])
-						.each(function(i) {
+						.each(function(i) { 
 							i.dockers.each(function(docker) {
 								if (docker.getDockedShape() == shape) {
 									var rPoint = Object.clone(docker.referencePoint);
@@ -1106,15 +1295,15 @@ ORYX.Plugins.ShapeMenuPlugin = {
 										//docker.bounds.moveBy({x:rPointNew.x-rPoint.x, y:rPointNew.y-rPoint.y});
 									}
 								}
-							});
+							});	
 						});
-
+					
 					// for attached events
 					if(shape.dockers.length>0&&shape.dockers.first().getDockedShape()) {
 						newShape.dockers.first().setDockedShape(shape.dockers.first().getDockedShape());
 						newShape.dockers.first().setReferencePoint(Object.clone(shape.dockers.first().referencePoint));
 					}
-
+				
 				} else { // is edge
 					newShape.dockers.first().setDockedShape(shape.dockers.first().getDockedShape());
 					newShape.dockers.first().setReferencePoint(shape.dockers.first().referencePoint);
@@ -1123,8 +1312,8 @@ ORYX.Plugins.ShapeMenuPlugin = {
 				}
 			}
 		});
-
-		// Create and execute command (for undo/redo)
+		
+		// Create and execute command (for undo/redo)			
 		var command = new MorphTo(shape, stencil, this.facade);
 		this.facade.executeCommands([command]);
 	}
@@ -1145,7 +1334,7 @@ ORYX.Plugins.ShapeMenu = {
 
 		this.node = ORYX.Editor.graft("http://www.w3.org/1999/xhtml", $(parentNode),
 			['div', {id: ORYX.Editor.provideId(), 'class':'Oryx_ShapeMenu'}]);
-
+		
 		this.alignContainers = new Hash();
 		this.numberOfButtonsPerLevel = new Hash();
 	},
@@ -1157,7 +1346,7 @@ ORYX.Plugins.ShapeMenu = {
 			this.alignContainers[button.align] = ORYX.Editor.graft("http://www.w3.org/1999/xhtml", this.node,
 					['div', {'class':button.align}]);
 			this.node.appendChild(this.alignContainers[button.align]);
-
+			
 			// add event listeners for hover effect
 			var onBubble = false;
 			this.alignContainers[button.align].addEventListener(ORYX.CONFIG.EVENT_MOUSEOVER, this.hoverAlignContainer.bind(this, button.align), onBubble);
@@ -1186,7 +1375,7 @@ ORYX.Plugins.ShapeMenu = {
 		this.isVisible = false;
 	},
 
-
+	
 	/**
 	 * Show the shape menu
 	 */
@@ -1236,13 +1425,13 @@ ORYX.Plugins.ShapeMenu = {
 		var right = 0
 			rightButtonGroup = 0;
 		var size = 22;
-
+		
 		this.getWillShowButtons().sortBy(function(button) {
 			return button.group;
 		});
-
+		
 		this.getWillShowButtons().each(function(button){
-
+			
 			var numOfButtonsPerLevel = this.getNumberOfButtonsPerLevel(button.align);
 
 			if (button.align == ORYX.CONFIG.SHAPEMENU_LEFT) {
@@ -1253,12 +1442,12 @@ ORYX.Plugins.ShapeMenu = {
 				}
 				var x = Math.floor(left / numOfButtonsPerLevel)
 				var y = left % numOfButtonsPerLevel;
-
+				
 				button.setLevel(x);
-
-				button.setPosition(a.x-5 - (x+1)*size,
+				
+				button.setPosition(a.x-5 - (x+1)*size, 
 						a.y+numOfButtonsPerLevel*button.group*size + button.group*0.3*size + y*size);
-
+				
 				//button.setPosition(a.x-22, a.y+left*size);
 				left++;
  			} else if (button.align == ORYX.CONFIG.SHAPEMENU_TOP) {
@@ -1269,9 +1458,9 @@ ORYX.Plugins.ShapeMenu = {
 				}
  				var x = top % numOfButtonsPerLevel;
  				var y = Math.floor(top / numOfButtonsPerLevel);
-
+ 				
  				button.setLevel(y);
-
+ 				
  				button.setPosition(a.x+numOfButtonsPerLevel*button.group*size + button.group*0.3*size + x*size,
  						a.y-5 - (y+1)*size);
 				top++;
@@ -1283,9 +1472,9 @@ ORYX.Plugins.ShapeMenu = {
 				}
  				var x = bottom % numOfButtonsPerLevel;
  				var y = Math.floor(bottom / numOfButtonsPerLevel);
-
+ 				
  				button.setLevel(y);
-
+ 				
  				button.setPosition(a.x+numOfButtonsPerLevel*button.group*size + button.group*0.3*size + x*size,
  						a.y+bounds.height() + 5 + y*size);
 				bottom++;
@@ -1297,10 +1486,10 @@ ORYX.Plugins.ShapeMenu = {
 				}
 				var x = Math.floor(right / numOfButtonsPerLevel)
 				var y = right % numOfButtonsPerLevel;
-
+				
 				button.setLevel(x);
-
-				button.setPosition(a.x+bounds.width() + 5 + x*size,
+				
+				button.setPosition(a.x+bounds.width() + 5 + x*size, 
 						a.y+numOfButtonsPerLevel*button.group*size + button.group*0.3*size + y*size - 5);
 				right++;
 			}
@@ -1330,23 +1519,23 @@ ORYX.Plugins.ShapeMenu = {
 			if(button.align == align) button.showOpaque();
 		});
 	},
-
+	
 	resetAlignContainer: function(align, evt) {
 		this.buttons.each(function(button){
 			if(button.align == align) button.showTransparent();
 		});
 	},
-
+	
 	isHover: function() {
 		return 	this.buttons.any(function(value){
 					return value.isHover();
 				});
 	},
-
+	
 	getWillShowButtons: function() {
 		return this.buttons.findAll(function(value){return value.willShow});
 	},
-
+	
 	/**
 	 * Returns a set on buttons for that align value
 	 * @params {String} align
@@ -1355,16 +1544,16 @@ ORYX.Plugins.ShapeMenu = {
 	getButtons: function(align, group){
 		return this.getWillShowButtons().findAll(function(b){ return b.align == align && (group === undefined || b.group == group)})
 	},
-
+	
 	/**
 	 * Set the number of buttons to display on each level of the shape menu in the specified align group.
-	 * Example: setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_RIGHT, 2) causes that the buttons of the right align group
+	 * Example: setNumberOfButtonsPerLevel(ORYX.CONFIG.SHAPEMENU_RIGHT, 2) causes that the buttons of the right align group 
 	 * will be rendered in 2 rows.
 	 */
 	setNumberOfButtonsPerLevel: function(align, number) {
 		this.numberOfButtonsPerLevel[align] = number;
 	},
-
+	
 	/**
 	 * Returns the number of buttons to display on each level of the shape menu in the specified align group.
 	 * Default value is 1
@@ -1380,7 +1569,7 @@ ORYX.Plugins.ShapeMenu = {
 ORYX.Plugins.ShapeMenu = Clazz.extend(ORYX.Plugins.ShapeMenu);
 
 ORYX.Plugins.ShapeMenuButton = {
-
+	
 	/**
 	 * Constructor
 	 * @param option A key map specifying the configuration options:
@@ -1389,7 +1578,7 @@ ORYX.Plugins.ShapeMenuButton = {
 	 * 					msg:	(String) A tooltip message
 	 * 					caption:(String) The caption of the button (attention: button width > 22, only set for single column button layouts)
 	 * 					align:	(String) The direction in which the button is aligned
-	 * 					group: 	(Integer) The button group in the specified alignment
+	 * 					group: 	(Integer) The button group in the specified alignment 
 	 * 							(buttons in the same group will be aligned side by side)
 	 * 					callback:		(Function) A callback that is executed when the button is clicked
 	 * 					dragcallback:	(Function) A callback that is executed when the button is dragged
@@ -1418,7 +1607,7 @@ ORYX.Plugins.ShapeMenuButton = {
 		if(this.option.msg){
 			imgOptions.title = this.option.msg;
 		}
-
+		
 		// graft and update icon (not in grafting for ns reasons).
 		//TODO Enrich graft()-function to do this in one of the above steps.
 		if(this.option.icon)
@@ -1456,7 +1645,7 @@ ORYX.Plugins.ShapeMenuButton = {
 		this.willShow 	= false;
 		this.resetTimer;
 	},
-
+	
 	hide: function() {
 		this.node.style.display = "none";
 		this.isVisible = false;
@@ -1467,15 +1656,15 @@ ORYX.Plugins.ShapeMenuButton = {
 		this.node.style.opacity = this.opacity;
 		this.isVisible = true;
 	},
-
+	
 	showOpaque: function() {
 		this.node.style.opacity = 1.0;
 	},
-
+	
 	showTransparent: function() {
 		this.node.style.opacity = this.opacity;
 	},
-
+	
 	prepareToShow: function() {
 		this.willShow = true;
 	},
@@ -1489,14 +1678,14 @@ ORYX.Plugins.ShapeMenuButton = {
 		this.node.style.left = x + "px";
 		this.node.style.top = y + "px";
 	},
-
+	
 	setLevel: function(level) {
 		if(level==0) this.opacity = 0.5;
 		else if(level==1) this.opacity = 0.2;
 		//else if(level==2) this.opacity = 0.1;
 		else this.opacity = 0.0;
 	},
-
+	
 	setChildWidth: function(width) {
 		this.childNode.style.width = width + "px";
 	},
@@ -1505,16 +1694,16 @@ ORYX.Plugins.ShapeMenuButton = {
 		// Delete the timeout for hiding
 		window.clearTimeout( this.resetTimer )
 		this.resetTimer = window.setTimeout( this.doReset.bind(this), 100)
-
+		
 		if(this.option.resetcallback) {
 			this.option.arguments.push(evt);
 			var state = this.option.resetcallback.apply(this, this.option.arguments);
 			this.option.arguments.remove(evt);
 		}
 	},
-
+	
 	doReset: function() {
-
+		
 		if(this.node.hasClassName('Oryx_down'))
 			this.node.removeClassName('Oryx_down');
 
@@ -1537,10 +1726,10 @@ ORYX.Plugins.ShapeMenuButton = {
 		// Delete the timeout for hiding
 		window.clearTimeout( this.resetTimer )
 		this.resetTimer = null;
-
+		
 		this.node.addClassName('Oryx_hover');
 		this.dragStart = false;
-
+		
 		if(this.option.hovercallback) {
 			this.option.arguments.push(evt);
 			var state = this.option.hovercallback.apply(this, this.option.arguments);
@@ -1594,11 +1783,11 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
         this.parent = option.parent;
         this.currentReference = currentReference;
         this.shapeOptions = option.shapeOptions;
-	},
+	},			
 	execute: function(){
-
+		
 		var resume = false;
-
+		
 		if (this.shape) {
             this.shape.properties["oryx-invisid"] = Math.random();
 			if (this.shape instanceof ORYX.Core.Node) {
@@ -1610,9 +1799,9 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
 					this.edge.dockers.last().setDockedShape(this.shape);
 					this.edge.dockers.last().setReferencePoint(this.targetRefPos);
 				}
-
+				
 				this.plugin.facade.setSelection([this.shape]);
-
+				
 			} else if (this.shape instanceof ORYX.Core.Edge) {
 				this.plugin.facade.getCanvas().add(this.shape);
 				this.shape.dockers.first().setDockedShape(this.connectedShape);
@@ -1625,21 +1814,21 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
             this.shape.properties["oryx-invisid"] = Math.random();
 			this.edge = (!(this.shape instanceof ORYX.Core.Edge)) ? this.shape.getIncomingShapes().first() : undefined;
 		}
-
+		
 		if (this.currentReference && this.position) {
-
+			
 			if (this.shape instanceof ORYX.Core.Edge) {
-
+			
 				if (!(this.currentReference instanceof ORYX.Core.Canvas)) {
 					this.shape.dockers.last().setDockedShape(this.currentReference);
-
+					
 					// @deprecated It now uses simply the midpoint
 					var upL = this.currentReference.absoluteXY();
 					var refPos = {
 						x: this.position.x - upL.x,
 						y: this.position.y - upL.y
 					};
-
+					
 					this.shape.dockers.last().setReferencePoint(this.currentReference.bounds.midPoint());
 				}
 				else {
@@ -1648,7 +1837,7 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
 				}
 				this.sourceRefPos = this.shape.dockers.first().referencePoint;
 				this.targetRefPos = this.shape.dockers.last().referencePoint;
-
+				
 			} else if (this.edge){
 				this.sourceRefPos = this.edge.dockers.first().referencePoint;
 				this.targetRefPos = this.edge.dockers.last().referencePoint;
@@ -1658,7 +1847,7 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
 			var connectedShape = this.connectedShape;
 			var bc = connectedShape.bounds;
 			var bs = this.shape.bounds;
-
+			
 			var pos = bc.center();
 			if(containedStencil.defaultAlign()==="north") {
 				pos.y -= (bc.height() / 2) + ORYX.CONFIG.SHAPEMENU_CREATE_OFFSET + (bs.height()/2);
@@ -1681,29 +1870,29 @@ ORYX.Plugins.ShapeMenuPlugin.CreateCommand = ORYX.Core.Command.extend({
 			} else {
 				pos.x += (bc.width() / 2) + ORYX.CONFIG.SHAPEMENU_CREATE_OFFSET + (bs.width()/2);
 			}
-
+			
 			// Move shape to the new position
 			this.shape.bounds.centerMoveTo(pos);
-
+			
 			// Move all dockers of a node to the position
 			if (this.shape instanceof ORYX.Core.Node){
 				(this.shape.dockers||[]).each(function(docker){
 					docker.bounds.centerMoveTo(pos);
 				})
 			}
-
+			
 			//this.shape.update();
 			this.position = pos;
-
+			
 			if (this.edge){
 				this.sourceRefPos = this.edge.dockers.first().referencePoint;
 				this.targetRefPos = this.edge.dockers.last().referencePoint;
 			}
 		}
-
+		
 		this.plugin.facade.getCanvas().update();
 		this.plugin.facade.updateSelection();
-
+		
 		if (!resume) {
 			// If there is a connected shape
 			if (this.edge){

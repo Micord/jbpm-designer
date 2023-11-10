@@ -1,13 +1,35 @@
+/*
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.jbpm.designer.repository.guvnor;
 
 import java.util.Collection;
 
-import org.jbpm.designer.repository.*;
+import javax.enterprise.inject.Alternative;
+
+import org.jbpm.designer.repository.Asset;
+import org.jbpm.designer.repository.Directory;
+import org.jbpm.designer.repository.Filter;
+import org.jbpm.designer.repository.Repository;
+import org.uberfire.java.nio.file.NoSuchFileException;
 
 /**
  * Repository implementation that is using Guvnor as a storage
  */
-//@Alternative
+@Alternative
 public class GuvnorRepository implements Repository {
 
     public GuvnorRepository() {
@@ -23,7 +45,8 @@ public class GuvnorRepository implements Repository {
         throw new UnsupportedOperationException();
     }
 
-    public Collection<Asset> listAssetsRecursively(String startAt, Filter filter) {
+    public Collection<Asset> listAssetsRecursively(String startAt,
+                                                   Filter filter) {
         throw new UnsupportedOperationException();
     }
 
@@ -35,15 +58,19 @@ public class GuvnorRepository implements Repository {
         throw new UnsupportedOperationException();
     }
 
-    public boolean deleteDirectory(String directory, boolean failIfNotEmpty) {
+    public boolean deleteDirectory(String directory,
+                                   boolean failIfNotEmpty) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean copyDirectory(String uniqueId, String location) {
+    public boolean copyDirectory(String uniqueId,
+                                 String location) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean moveDirectory(String uniqueId, String location, String name) {
+    public boolean moveDirectory(String uniqueId,
+                                 String location,
+                                 String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -51,15 +78,16 @@ public class GuvnorRepository implements Repository {
         throw new UnsupportedOperationException();
     }
 
-    public Collection<Asset> listAssets(String location, Filter filter) {
+    public Collection<Asset> listAssets(String location,
+                                        Filter filter) {
         throw new UnsupportedOperationException();
     }
 
-    public Asset loadAsset(String assetUniqueId) {
+    public Asset loadAsset(String assetUniqueId) throws NoSuchFileException {
         throw new UnsupportedOperationException();
     }
 
-    public Asset loadAssetFromPath(String path) {
+    public Asset loadAssetFromPath(String path) throws NoSuchFileException {
         throw new UnsupportedOperationException();
     }
 
@@ -67,7 +95,9 @@ public class GuvnorRepository implements Repository {
         throw new UnsupportedOperationException();
     }
 
-    public String updateAsset(Asset asset, String commitMessage) {
+    public String updateAsset(Asset asset,
+                              String commitMessage,
+                              String sessionId) throws NoSuchFileException {
         return null;
     }
 
@@ -83,11 +113,14 @@ public class GuvnorRepository implements Repository {
         throw new UnsupportedOperationException();
     }
 
-    public boolean copyAsset(String uniqueId, String location) {
+    public boolean copyAsset(String uniqueId,
+                             String location) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean moveAsset(String uniqueId, String location, String name) {
+    public boolean moveAsset(String uniqueId,
+                             String location,
+                             String name) {
         throw new UnsupportedOperationException();
     }
 }

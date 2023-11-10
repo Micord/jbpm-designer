@@ -1,11 +1,11 @@
-/**
- * Copyright 2012 JBoss Inc
+/*
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,14 @@
 
 package org.jbpm.designer.expressioneditor.marshalling;
 
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.jbpm.designer.expressioneditor.model.Condition;
-import org.jbpm.designer.expressioneditor.model.ExpressionEditorMessage;
-import org.jbpm.designer.expressioneditor.model.ConditionExpression;
-
 import java.io.ByteArrayOutputStream;
+
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import org.jbpm.designer.expressioneditor.model.Condition;
+import org.jbpm.designer.expressioneditor.model.ConditionExpression;
+import org.jbpm.designer.expressioneditor.model.ExpressionEditorMessage;
 
 public class ExpressionEditorMessageJSONMarshaller {
 
@@ -33,15 +33,20 @@ public class ExpressionEditorMessageJSONMarshaller {
 
     public String marshall(ExpressionEditorMessage message) throws Exception {
 
-        if (message == null) return null;
+        if (message == null) {
+            return null;
+        }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         JsonFactory jsonFactory = new JsonFactory();
-        JsonGenerator generator = jsonFactory.createJsonGenerator(outputStream, JsonEncoding.UTF8);
+        JsonGenerator generator = jsonFactory.createJsonGenerator(outputStream,
+                                                                  JsonEncoding.UTF8);
 
         generator.writeStartObject();
 
-        if (message.getExpression() == null) message.setExpression(new ConditionExpression());
+        if (message.getExpression() == null) {
+            message.setExpression(new ConditionExpression());
+        }
 
         if (message.getExpression() != null) {
 
@@ -96,7 +101,5 @@ public class ExpressionEditorMessageJSONMarshaller {
 
         generator.close();
         return outputStream.toString();
-
     }
-
 }

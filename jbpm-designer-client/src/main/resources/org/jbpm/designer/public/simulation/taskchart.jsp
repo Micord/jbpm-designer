@@ -6,6 +6,7 @@
 <link href="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/css/simulation/simulationcharts.css" rel="stylesheet" type="text/css">
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/d3.v2.min.js"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/nv.min.js"></script>
+<script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/js/simulation/chartutils-min.js"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
 <script src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/lib/handlebars-1.0.0.beta.6.js" type="text/javascript"></script>
 <script>
@@ -18,11 +19,15 @@ function clearChart() {
 <center>
 <div style="margin:20;padding:0;">
 	<!-- <div class="timelineicon"><a href="#" onclick="clearChart(); showTimeline(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/timelineicon.png" title="Timeline"/></a></div> -->
-	<div class="tableicon"><a href="#" onclick="clearChart(); showTable(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/tableicon.png" title="Table"/></a></div>
-    <div class="pcharticon"><a href="#" onclick="clearChart(); showPieChart(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/piecharticon.png" title="Pie Chart"/></a></div>
-    <div class="hbcharticon"><a href="#" onclick="clearChart(); showHBarChart(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/hbarcharticon.png" title="Horizontal Bar Chart"/></a></div>
-    <div class="bcharticon"><a href="#" onclick="clearChart(); showBarChart(); return false;"><img src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/barcharticon.png" title="Bar Chart"/></a></div>
-    <div class="charttitle"><script>document.write(parent.ORYX.EDITOR.simulationChartTitle +  " (" + parent.ORYX.EDITOR.simulationChartNodeName + ")");</script></div>
+	<div class="tableicon"><a href="#" onclick="clearChart(); showTable(); return false;"><img id="tableiconimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/tableicon.png" title="Table"/></a></div>
+	<script>document.getElementById('tableiconimg').title = parent.ORYX.I18N.View.sim.Table;</script>
+	<div class="pcharticon"><a href="#" onclick="clearChart(); showPieChart(); return false;"><img id="piecharticonimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/piecharticon.png" title="Pie Chart"/></a></div>
+	<script>document.getElementById('piecharticonimg').title = parent.ORYX.I18N.View.sim.PieChart;</script>
+	<div class="hbcharticon"><a href="#" onclick="clearChart(); showHBarChart(); return false;"><img id="hbarcharticonimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/hbarcharticon.png" title="Horizontal Bar Chart"/></a></div>
+	<script>document.getElementById('hbarcharticonimg').title = parent.ORYX.I18N.View.sim.HorizontalBarChart;</script>
+	<div class="bcharticon"><a href="#" onclick="clearChart(); showBarChart(); return false;"><img id="barcharticonimg" src="<%=request.getContextPath()%>/org.jbpm.designer.jBPMDesigner/images/simulation/barcharticon.png" title="Bar Chart"/></a></div>
+	<script>document.getElementById('barcharticonimg').title = parent.ORYX.I18N.View.sim.BarChart;</script>
+	<div class="charttitle"><script>var nodename = parent.ORYX.EDITOR.simulationChartNodeName.replace(/</g,'&lt;').replace(/>/g,'&gt;'); document.write(parent.ORYX.EDITOR.simulationChartTitle +  " (" + nodename + ")");</script></div>
 </div><br/>
 <div class="outterchart">
     <h2><script>document.write(parent.ORYX.I18N.View.sim.chartsExecutionTimes);</script></h2>
@@ -57,6 +62,9 @@ function clearChart() {
 		}
 		function showBarChart() {
 			var chartData = parent.ORYX.EDITOR.simulationChartData;
+			if(chartData && chartData.length > 0) {
+				simChartSetProcessAveragesLabels(chartData[0], parent.ORYX.I18N);
+			}
 			nv.addGraph(function() {
 				var chart = nv.models.discreteBarChart().x(function(d) {
 					return d.label
@@ -65,7 +73,7 @@ function clearChart() {
 				}).staggerLabels(true)
 				//.staggerLabels(historicalBarChart[0].values.length > 8)
 				.tooltips(true).showValues(true);
-				chart.yAxis.axisLabel('Time (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
+				chart.yAxis.axisLabel(parent.ORYX.I18N.View.sim.chartsExecutionTimesTime + ' (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
 	
 				d3.select('#chart').datum(chartData).transition().duration(500)
 						.call(chart);
@@ -90,7 +98,7 @@ function clearChart() {
 				chart.yAxis
 					.tickFormat(d3.format(',.2f'));
 				
-				chart.yAxis.axisLabel('Time (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
+				chart.yAxis.axisLabel(parent.ORYX.I18N.View.sim.chartsExecutionTimesTime + ' (' + parent.ORYX.EDITOR.simulationChartTimeUnit + ')')
 				
 				d3.select('#chart')
 					.datum(chartData)

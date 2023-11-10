@@ -90,7 +90,19 @@ ORYX.Plugins.CanvasTitle = {
 		
 		this.facade.registerOnEvent(ORYX.CONFIG.EVENT_LOADED, this.showTitle.bind(this));
 		this.facade.registerOnEvent(ORYX.CONFIG.EVENT_PROPWINDOW_PROP_CHANGED, this.updateTitle.bind(this));
+
+        this.facade.registerOnEvent(ORYX.CONFIG.EVENT_RESIZE_START,  this.hideTitle.bind(this));
+        this.facade.registerOnEvent(ORYX.CONFIG.EVENT_RESIZE_END,  this.showTitle.bind(this));
+
 	},
+
+    hideTitle: function() {
+        this.facade.raiseEvent({
+            type: 	ORYX.CONFIG.EVENT_OVERLAY_HIDE,
+            id: 	this.titleID
+        });
+    },
+
 	showTitle : function() {
 		this.titleNode.textContent = this._getTitleFromJSON();
 		
@@ -153,6 +165,10 @@ ORYX.Plugins.CanvasTitle = {
         var processId = jsonPath(processJSON.evalJSON(), "$.properties.id");
         var processVersion = jsonPath(processJSON.evalJSON(), "$.properties.version");
         var retValue = "";
+
+        if(ORYX.VIEWLOCKED && ORYX.VIEWLOCKED == true) {
+            retValue += "READ ONLY ";
+        }
         
         if(processName && processName != "") {
         	retValue += processName[0];
@@ -162,10 +178,9 @@ ORYX.Plugins.CanvasTitle = {
         	if(processId && processId != "" && processPackage && processPackage != "") {
         		retValue += " (" + processId[0] + ")";
         	}
-        	return retValue;
-        } else {
-        	return "";
         }
+
+        return retValue;
 	}
 };
 

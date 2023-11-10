@@ -1,0 +1,22 @@
+[
+  [
+    "name" : "Minimalistic",
+    "parameters" : [
+      "title" : new StringDataType()
+    ], 
+ 	"results" : [ 
+    	   "searchresults" : new ObjectDataType("java.util.Map")
+  	], 
+    "displayName" : "",
+    "icon" : "",
+    "category" : "",
+    "defaultHandler" : "",
+    "documentation" : "",
+    "dependencies": [
+
+    ],
+    "mavenDependencies" : [ 
+
+    ]
+  ]
+]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 JBoss Inc
+ * Copyright 2010 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,7 @@ if(!ORYX.CONFIG) ORYX.CONFIG = {};
 
 ORYX.CONFIG.WEB_URL = "org.jbpm.designer.jBPMDesigner";
 
-ORYX.CONFIG.CREATE_ROLES_FIELD = function (pair, dataSource, grid, index, facade) {
-};
 
-ORYX.CONFIG.RESOURCES_PATH = "";
 
 ORYX.CONFIG.MENU_INDEX = {"File" : 1, "Edit" : 2, "Undo": 3, "localstorage": 4, "Z-Order" : 5,  "Alignment": 6, "Grouping": 7, "lockunlockgroup": 8, "Docker" : 9, "colorpickergroup": 'AAA', "editprocessforms": 'BBB', 'sharegroup': 'CCC', "importgroup": 'DDD', "validationandsimulation": 'EEE', "servicerepogroup": 'FFF', "paintgroup": 'GGG', "fullscreengroup": 'HHH', "Help" : "ZZZZZZ"};
 
@@ -38,7 +35,7 @@ ORYX.CONFIG.UUID_URL = function(uuid, profile) {
       ORYX.PATH = "designer/";
   }
 
-  return ORYX.PATH + "uuidRepository?uuid="+ uuid + "&profile=" + profile + "&pp=" + ORYX.PREPROCESSING + "&ts=" + new Date().getTime();
+  return ORYX.PATH + "uuidRepository?uuid="+ Base64.encode(encodeURI(uuid)) + "&profile=" + profile + "&pp=" + ORYX.PREPROCESSING + "&ts=" + new Date().getTime();
 };
 
 ORYX.FULL_PERSPECTIVE = "http://b3mn.org/stencilset/bpmn2.0#";
@@ -66,7 +63,7 @@ ORYX.CONFIG.TRANSFORMER_URL = function(uuid, profile) {
    if (profile === undefined) {
       profile = ORYX.PROFILE;
    }
-   return ORYX.PATH + "transformer?uuid="+ uuid + "&profile=" + profile;
+   return ORYX.PATH + "transformer?uuid="+ window.btoa(encodeURI(uuid)) + "&profile=" + profile;
 };
 
 ORYX.CONFIG.TASKFORMS_URL = function(uuid, profile) {
@@ -76,9 +73,8 @@ ORYX.CONFIG.TASKFORMS_URL = function(uuid, profile) {
 	if (profile === undefined) {
 	   profile = ORYX.PROFILE;
 	}
-	return ORYX.PATH + "taskforms?uuid="+ uuid + "&profile=" + profile;
+	return ORYX.PATH + "taskforms?uuid="+ window.btoa(encodeURI(uuid)) + "&profile=" + profile;
 };
-
 ORYX.CONFIG.UUID_AUTOSAVE_INTERVAL = 120000;
 ORYX.CONFIG.UUID_AUTOSAVE_DEFAULT = false;
 	
@@ -138,8 +134,6 @@ ORYX.CONFIG.CPNTOOLSIMPORTER = 			ORYX.CONFIG.ROOT_PATH + "cpntoolsimporter";
 ORYX.CONFIG.BPMN2XPDLPATH =				ORYX.CONFIG.ROOT_PATH + "bpmn2xpdl";
 ORYX.CONFIG.TBPMIMPORT =				ORYX.CONFIG.ROOT_PATH + "tbpmimport";
 
-
-
 	/* Namespaces */
 ORYX.CONFIG.NAMESPACE_ORYX =			"http://www.b3mn.org/oryx";
 ORYX.CONFIG.NAMESPACE_SVG =				"http://www.w3.org/2000/svg";
@@ -156,7 +150,7 @@ ORYX.CONFIG.ZOOM_OFFSET =				0.1;
 ORYX.CONFIG.DEFAULT_SHAPE_MARGIN =		60;
 ORYX.CONFIG.SCALERS_SIZE =				7;
 ORYX.CONFIG.MINIMUM_SIZE =				20;
-ORYX.CONFIG.MAXIMUM_SIZE =				10000;
+ORYX.CONFIG.MAXIMUM_SIZE =				30000;
 ORYX.CONFIG.OFFSET_MAGNET =				15;
 ORYX.CONFIG.OFFSET_EDGE_LABEL_TOP =		14;
 ORYX.CONFIG.OFFSET_EDGE_LABEL_BOTTOM =	12;
@@ -196,8 +190,11 @@ ORYX.CONFIG.TYPE_URL =					"url";
 ORYX.CONFIG.TYPE_DIAGRAM_LINK =			"diagramlink";
 ORYX.CONFIG.TYPE_COMPLEX =				"complex";
 ORYX.CONFIG.TYPE_TEXT =					"text";
+ORYX.CONFIG.TYPE_ENCODED_TEXT =         "encodedtext";
 ORYX.CONFIG.TYPE_VARDEF =               "vardef";
 ORYX.CONFIG.TYPE_EXPRESSION =           "expression";
+ORYX.CONFIG.TYPE_TEXT_EXPRESSION =      "textexpression";
+ORYX.CONFIG.TYPE_DOCS_EXPRESSION =      "docsexpression";
 ORYX.CONFIG.TYPE_ACTION =               "action";
 ORYX.CONFIG.TYPE_GLOBAL =               "global";
 ORYX.CONFIG.TYPE_IMPORT =               "import";
@@ -210,13 +207,13 @@ ORYX.CONFIG.TYPE_VISUALDATAASSIGNMENTS = "visualdataassignment";
 ORYX.CONFIG.TYPE_CALLEDELEMENT  =       "calledelement";
 ORYX.CONFIG.TYPE_CUSTOM =               "custom";
 ORYX.CONFIG.TYPE_REASSIGNMENT =         "reassignment";
-ORYX.CONFIG.TYPE_GROUPS_EDITOR =        "groupseditor";
 ORYX.CONFIG.TYPE_NOTIFICATIONS =        "notifications";
 ORYX.CONFIG.TYPE_DTYPE_VARDEF =         "vardef";
 ORYX.CONFIG.TYPE_DTYPE_DINPUT =         "dinput";
 ORYX.CONFIG.TYPE_DTYPE_DOUTPUT =        "doutput";
 ORYX.CONFIG.TYPE_DTYPE_GLOBAL =         "global";
 ORYX.CONFIG.TYPE_RULEFLOW_GROUP =       "ruleflowgroup";
+ORYX.CONFIG.TYPE_CASE_ROLES =           "caseroles";
 
 /* Vertical line distance of multiline labels */
 ORYX.CONFIG.LABEL_LINE_DISTANCE =		2;
@@ -258,6 +255,8 @@ ORYX.CONFIG.EVENT_DRAGDROP_END =			"dragdrop.end";
 ORYX.CONFIG.EVENT_RESIZE_START =			"resize.start";
 ORYX.CONFIG.EVENT_RESIZE_END =				"resize.end";
 ORYX.CONFIG.EVENT_DRAGDOCKER_DOCKED =		"dragDocker.docked";
+ORYX.CONFIG.EVENT_DRAGDOCKER_MOVE_FINISHED = "dragDocker.move.finished";
+ORYX.CONFIG.EVENT_DOCKER_EVENT =            "docker.event";
 ORYX.CONFIG.EVENT_HIGHLIGHT_SHOW =			"highlight.showHighlight";
 ORYX.CONFIG.EVENT_HIGHLIGHT_HIDE =			"highlight.hideHighlight";
 ORYX.CONFIG.EVENT_LOADING_ENABLE =			"loading.enable";
@@ -267,11 +266,14 @@ ORYX.CONFIG.EVENT_OVERLAY_SHOW =			"overlay.show";
 ORYX.CONFIG.EVENT_OVERLAY_HIDE =			"overlay.hide";
 ORYX.CONFIG.EVENT_DICTIONARY_ADD =          "dictionary.add";
 ORYX.CONFIG.EVENT_TASKFORM_EDIT =           "taskform.edit";
+ORYX.CONFIG.EVENT_TASKFORM_GENERATE =        "taskform.generate";
+ORYX.CONFIG.EVENT_TASKFORM_GENERATE_ALL =        "taskform.generate.all";
 ORYX.CONFIG.EVENT_ARRANGEMENT_TOP =			"arrangement.setToTop";
 ORYX.CONFIG.EVENT_ARRANGEMENT_BACK =		"arrangement.setToBack";
 ORYX.CONFIG.EVENT_ARRANGEMENT_FORWARD =		"arrangement.setForward";
 ORYX.CONFIG.EVENT_ARRANGEMENT_BACKWARD =	"arrangement.setBackward";
 ORYX.CONFIG.EVENT_PROPWINDOW_PROP_CHANGED =	"propertyWindow.propertyChanged";
+ORYX.CONFIG.EVENT_KEYBIND_MOVE_FINISHED =    "keybind.move.finished";
 ORYX.CONFIG.EVENT_LAYOUT_ROWS =				"layout.rows";
 ORYX.CONFIG.EVENT_LAYOUT_BPEL =				"layout.BPEL";
 ORYX.CONFIG.EVENT_LAYOUT_BPEL_VERTICAL =    "layout.BPEL.vertical";
@@ -290,9 +292,11 @@ ORYX.CONFIG.EVENT_DRAG_TRACKER_DRAG =       "dragTracker.drag";
 ORYX.CONFIG.EVENT_DRAG_TRACKER_RESIZE =     "dragTracker.resize";
 ORYX.CONFIG.EVENT_DROP_SHAPE =				"drop.shape";
 ORYX.CONFIG.EVENT_SHAPE_DELETED =				"shape.deleted";
+ORYX.CONFIG.EVENT_SHAPE_CREATED =             "shape.created";
 ORYX.CONFIG.EVENT_SHAPE_ADDED =				"shape.added";
 ORYX.CONFIG.EVENT_FACADE_SELECTION_DELETION_REQUEST =				"facade_selection.deletion.request";
 ORYX.CONFIG.EVENT_NODEXML_SHOW = "nodexml.show";
+ORYX.CONFIG.EVENT_DATAIOEDITOR_SHOW = "dataioeditor.show";
 ORYX.CONFIG.EVENT_VOICE_COMMAND = "voice.command";
 ORYX.CONFIG.EVENT_SIMULATION_SHOW_RESULTS = "simulation.showresults";
 ORYX.CONFIG.EVENT_SIMULATION_DISPLAY_GRAPH = "simulation.displaygraph";
@@ -303,6 +307,12 @@ ORYX.CONFIG.EVENT_SIMULATION_ANNOTATE_PROCESS = "simulation.annotateprocess";
 ORYX.CONFIG.EVENT_SIMULATION_SHOW_ANNOTATED_PROCESS = "simulation.showannotatedprocess";
 ORYX.CONFIG.EVENT_NOTIFICATION_SHOW = "notification.show";
 ORYX.CONFIG.EVENT_DEF_DELETED = "notification.def.deleted";
+ORYX.CONFIG.EVENT_UPDATE_TASK_TYPE = "updatetaskevent";
+ORYX.CONFIG.EVENT_PASTE_NOTEMPTY_END = "paste.notempty.end";
+ORYX.CONFIG.EVENT_PASTE_END = "paste.end";
+ORYX.CONFIG.EVENT_DOCELEMENT_TO_MODEL = "docelementtomodelevent";
+ORYX.CONFIG.EVENT_INSTALL_WORKITEM = "workitem.install";
+ORYX.CONFIG.EVENT_EDIT_PROPS = "props.edit";
 
 // paint
 ORYX.CONFIG.EVENT_PAINT_NEWSHAPE = "paint.newshape";
@@ -314,11 +324,13 @@ ORYX.CONFIG.EVENT_MODE_CHANGED = "mode.changed";
 ORYX.CONFIG.EVENT_PAINT_CANVAS_TOGGLED  = "canvas.toggled";
 // save-cancel-reload
 ORYX.CONFIG.EVENT_DO_SAVE = "designereventdosave";
+ORYX.CONFIG.EVENT_DO_UPDATE = "designereventdoupdate";
+ORYX.CONFIG.EVENT_DO_CHECKSAVE = "designereventdochecksave";
 ORYX.CONFIG.EVENT_CANCEL_SAVE = "designereventcancelsave";
 ORYX.CONFIG.EVENT_DO_RELOAD = "designereventreloads";
-ORYX.CONFIG.EVENT_PROCESS_SAVED = "designereventprocesssaved";
-ORYX.CONFIG.EVENT_PROCESS_CHANGED = "designereventprocesschanged";
+ORYX.CONFIG.EVENT_UPDATE_LOCK = "designerupdatelock";
 
+ORYX.CONFIG.EVENT_OPEN_XML_EDITOR = "designeropeninxmleditor";
 
 // voice commands
 ORYX.CONFIG.VOICE_COMMAND_GENERATE_FORMS = "voice.command.generate.forms";
@@ -372,6 +384,9 @@ ORYX.CONFIG.EDIT_OFFSET_PASTE =			10;
 ORYX.CONFIG.KEY_CODE_X = 				88;
 ORYX.CONFIG.KEY_CODE_C = 				67;
 ORYX.CONFIG.KEY_CODE_V = 				86;
+ORYX.CONFIG.KEY_CODE_P = 				80;
+ORYX.CONFIG.KEY_CODE_M = 				77;
+ORYX.CONFIG.KEY_CODE_D = 				68;
 ORYX.CONFIG.KEY_CODE_DELETE = 			46;
 ORYX.CONFIG.KEY_CODE_META =				224;
 ORYX.CONFIG.KEY_CODE_BACKSPACE =		8;
@@ -400,6 +415,9 @@ ORYX.CONFIG.KEY_ACTION_UP = 			"up";
 
 ORYX.CONFIG.PANEL_RIGHT_COLLAPSED = true;
 ORYX.CONFIG.PANEL_LEFT_COLLAPSED = true;
+
+ORYX.CONFIG.PANEL_RIGHT_COLLAPSED_SWITCH = ORYX.CONFIG.PANEL_RIGHT_COLLAPSED;
+ORYX.CONFIG.PANEL_LEFT_COLLAPSED_SWITCH = ORYX.CONFIG.PANEL_LEFT_COLLAPSED;
 
 ORYX.CONFIG.STENCIL_MAX_ORDER = 999;
 ORYX.CONFIG.STENCIL_GROUP_ORDER = function() {

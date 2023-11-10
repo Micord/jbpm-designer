@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 JBoss Inc
+ * Copyright 2014 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -328,6 +328,14 @@
     background-image: url(../../stencilsets/bpmn2.0jbpm/icons/throwing/escalation.png);  /** sprite-ref: palette-images-sprite; */
 }
 
+.stencilsets_bpmn2_0jbpm_bpmn2_0jbpm_json_icons_throwing_compensation,
+.x-tree-node-leaf .stencilsets_bpmn2_0jbpm_bpmn2_0jbpm_json_icons_throwing_compensation {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-image: url(../../stencilsets/bpmn2.0jbpm/icons/throwing/compensation.png);  /** sprite-ref: palette-images-sprite; */
+}
+
 .stencilsets_bpmn2_0jbpm_bpmn2_0jbpm_json_icons_throwing_signal,
 .x-tree-node-leaf .stencilsets_bpmn2_0jbpm_bpmn2_0jbpm_json_icons_throwing_signal {
     width: 16px;
@@ -562,6 +570,13 @@ These don't have a static icon
     background-image: url(../../images/dictionary.png);  /** sprite-ref: palette-images-sprite; */
 }
 
+.images_documentation {
+    width: 17px;
+    height: 17px;
+    background-repeat: no-repeat;
+    background-image: url(../../images/documentation.png);  /** sprite-ref: palette-images-sprite; */
+}
+
 .images_processforms {
     width: 16px;
     height: 16px;
@@ -574,4 +589,18 @@ These don't have a static icon
     height: 16px;
     background-repeat: no-repeat;
     background-image: url(../../images/view.png);  /** sprite-ref: palette-images-sprite; */
+}
+
+.images_dataio {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-image: url(../../images/dataio.png);  /** sprite-ref: palette-images-sprite; */
+}
+
+.images_editproperties {
+    width: 16px;
+    height: 16px;
+    background-repeat: no-repeat;
+    background-image: url(../../images/editproperties.png);  /** sprite-ref: palette-images-sprite; */
 }

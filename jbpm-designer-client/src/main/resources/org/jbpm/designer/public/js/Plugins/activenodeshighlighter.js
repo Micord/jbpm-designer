@@ -16,15 +16,6 @@ ORYX.Plugins.ActiveNodesHighlighter = Clazz.extend({
         }).bind(this));
     },
     applyHighlightingToChild: function(child) {
-        if(ORYX.ACTIVENODES) {
-            for(var i=0;i<ORYX.ACTIVENODES.length;i++) {
-                if(child instanceof ORYX.Core.Node || child instanceof ORYX.Core.Edge) {
-                    if(ORYX.ACTIVENODES[i] == child.resourceId) {
-                        child.setProperty("oryx-bordercolor", "#FF0000");
-                    }
-                }
-            }
-        }
         if(ORYX.COMPLETEDNODES) {
             for(var i=0;i<ORYX.COMPLETEDNODES.length;i++) {
                 if(child instanceof ORYX.Core.Node || child instanceof ORYX.Core.Edge) {
@@ -36,8 +27,21 @@ ORYX.Plugins.ActiveNodesHighlighter = Clazz.extend({
             }
         }
 
+        if(ORYX.ACTIVENODES) {
+            for(var i=0;i<ORYX.ACTIVENODES.length;i++) {
+                if(child instanceof ORYX.Core.Node || child instanceof ORYX.Core.Edge) {
+                    if(ORYX.ACTIVENODES[i] == child.resourceId) {
+                        child.setProperty("oryx-bordercolor", "#FF0000");
+                        // in case of looping current active node can have been completed before
+                        // soo reset background color from grey
+                        child.setProperty("oryx-bgcolor", child.properties["oryx-origbgcolor"]);
+                    }
+                }
+            }
+        }
+
         if(child instanceof ORYX.Core.Node || child instanceof ORYX.Core.Edge) {
-            if(ORYX.READONLY == true) {
+            if(ORYX.READONLY == true || ORYX.VIEWLOCKED == true) {
                 child.setSelectable(false);
                 child.setMovable(false);
                 child.setProperty("oryx-isselectable", "false");

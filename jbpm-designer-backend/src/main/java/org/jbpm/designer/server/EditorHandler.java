@@ -1,11 +1,11 @@
 /*
- * Copyright 2010 JBoss Inc
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,55 +15,88 @@
  */
 package org.jbpm.designer.server;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.WeakHashMap;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import bpsim.impl.BpsimFactoryImpl;
+import org.apache.commons.io.IOUtils;
 import org.jboss.drools.impl.DroolsFactoryImpl;
+import org.jbpm.designer.repository.vfs.RepositoryDescriptor;
 import org.jbpm.designer.util.ConfigurationProvider;
+import org.jbpm.designer.util.Utils;
 import org.jbpm.designer.web.plugin.IDiagramPlugin;
 import org.jbpm.designer.web.plugin.IDiagramPluginService;
 import org.jbpm.designer.web.plugin.impl.PluginServiceImpl;
 import org.jbpm.designer.web.preprocessing.IDiagramPreprocessingService;
 import org.jbpm.designer.web.preprocessing.IDiagramPreprocessingUnit;
-import org.jbpm.designer.web.preprocessing.impl.PreprocessingServiceImpl;
 import org.jbpm.designer.web.profile.IDiagramProfile;
 import org.jbpm.designer.web.profile.IDiagramProfileService;
-import org.jbpm.designer.web.profile.impl.ProfileServiceImpl;
 import org.jbpm.designer.web.profile.impl.RepositoryInfo;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.ST;
+import org.uberfire.backend.vfs.VFSService;
+import org.uberfire.io.IOService;
 
-/**
- * Servlet to load plugin and Oryx stencilset
- */
+@WebServlet(displayName = "Oryx Editor Handler", name = "EditorHandler",
+        urlPatterns = {"/editor", "/editor/*"},
+        initParams = {
+                @WebInitParam(name = "designer.dev", value = "true"),
+                @WebInitParam(name = "designer.preprocess", value = "true"),
+                @WebInitParam(name = "designer.locale", value = "en"),
+                @WebInitParam(name = "designer.skin", value = "default")})
 public class EditorHandler extends HttpServlet {
 
     private static final long serialVersionUID = -7439613152623067053L;
 
-    private static final Logger _logger =
+    private static final Logger logger =
             LoggerFactory.getLogger(EditorHandler.class);
 
     /**
      * The base path under which the application will be made available at runtime.
      * This constant should be used throughout the application.
      */
-    public static final String designer_path = ConfigurationProvider.getInstance().getDesignerContext();
+    public static final String DESIGNER_PATH = ConfigurationProvider.getInstance().getDesignerContext();
 
     /**
      * The designer DEV flag looked up from system properties.
      */
     public static final String DEV = "designer.dev";
 
+    /**
+     * The designer USEOLDDATAASSIGNMENTS flag looked up from system properties.
+     */
+    public static final String USEOLDDATAASSIGNMENTS = "designer.useolddataassignments";
+
+    public static final String SHOW_PDF_DOC = "designer.showpdfdoc";
+
     public static final String PRESET_PERSPECTIVE = "org.jbpm.designer.perspective";
+
+    public static final String BPSIM_DISPLAY = "org.jbpm.designer.bpsimdisplay";
+
+    public static final String FORMS_TYPE = "org.jbpm.designer.formstype";
 
     /**
      * The designer PREPROCESS flag looked up from system properties.
@@ -75,117 +108,146 @@ public class EditorHandler extends HttpServlet {
      */
     public static final String SKIN = "designer.skin";
 
+    public static final String SERVICE_REPO = "org.jbpm.service.repository";
+
+    public static final String SERVICE_REPO_TASKS = "org.jbpm.service.servicetasknames";
+
     /**
      * The designer bundle version looked up from the manifest.
      */
     public static final String BUNDLE_VERSION = "Bundle-Version";
 
     /**
+     * Used to enable/disable storing of SVG when process is saved.
+     */
+    public static final String STORE_SVG_ON_SAVE = "org.jbpm.designer.storesvgonsave";
+
+    /**
      * The designer dev mode setting.
      */
-    private boolean _devMode;
+    private boolean devMode;
+
+    /**
+     * The designer use old data assignments setting.
+     */
+    private boolean useOldDataAssignments;
+
+    /**
+     * Show / Hide PDF Documentation display option
+     */
+    private boolean showPDFDoc;
 
     /**
      * The designer preprocess mode setting.
      */
-    private boolean _preProcess;
+    private boolean preProcess;
 
     /**
      * The designer skin setting.
      */
-    private String _skin;
+    private String skin;
 
     /**
      * The designer version setting.
      */
-    private String _designerVersion;
+    private String designerVersion;
 
-    private String _doc;
+    private String doc;
+
+    private IDiagramProfile profile;
+
+    private String serviceRepo;
+    private String serviceRepoTasks;
 
     /**
      * The profile service, a global registry to get the
      * profiles.
      */
-//    @Inject
-    private static IDiagramProfileService _profileService = ProfileServiceImpl.getInstance();
+    @Inject
+    private IDiagramProfileService profileService = null;
 
-//    @Inject
-//    private VFSService vfsServices;
+    @Inject
+    private VFSService vfsServices;
 
-//    @Inject
-//    @Named("ioStrategy")
-//    private IOService ioService;
+    @Inject
+    @Named("ioStrategy")
+    private IOService ioService;
 
-//    @Inject
-//    @RequestScoped
-//    private RepositoryDescriptor descriptor;
+    @Inject
+    private RepositoryDescriptor descriptor;
 
     /**
      * The pre-processing service, a global registry to get
      * the pre-processing units.
      */
-    private IDiagramPreprocessingService _preProcessingService = null;
+    @Inject
+    private IDiagramPreprocessingService preProcessingService;
 
     /**
      * The plugin service, a global registry for all plugins.
      */
-    private IDiagramPluginService _pluginService = null;
+    private IDiagramPluginService pluginservice = null;
 
-    private List<String> _envFiles = new ArrayList<String>();
+    private List<String> envFiles = new ArrayList<String>();
 
-    private Map<String, List<IDiagramPlugin>> _pluginfiles =
+    private Map<String, List<IDiagramPlugin>> pluginFiles =
             new HashMap<String, List<IDiagramPlugin>>();
 
-    private Map<String, List<IDiagramPlugin>> _uncompressedPlugins =
+    private Map<String, List<IDiagramPlugin>> uncompressedPlugins =
             new WeakHashMap<String, List<IDiagramPlugin>>();
+
+    private ST editorTemplate;
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
         DroolsFactoryImpl.init();
         BpsimFactoryImpl.init();
-        _profileService.init(config.getServletContext());
-        _pluginService = PluginServiceImpl.getInstance(
+        profileService.init(config.getServletContext());
+        pluginservice = PluginServiceImpl.getInstance(
                 config.getServletContext());
-        _preProcessingService = PreprocessingServiceImpl.INSTANCE;
-        _preProcessingService.init(config.getServletContext());
+        preProcessingService.init(config.getServletContext(),
+                                  vfsServices);
 
-        _devMode = Boolean.parseBoolean(System.getProperty(DEV) == null ? config.getInitParameter(DEV) : System.getProperty(DEV));
-        _preProcess = Boolean.parseBoolean(System.getProperty(PREPROCESS) == null ? config.getInitParameter(PREPROCESS) : System.getProperty(PREPROCESS));
-        _skin = System.getProperty(SKIN) == null ? config.getInitParameter(SKIN) : System.getProperty(SKIN);
-        _designerVersion = readDesignerVersion(config.getServletContext());
-
+        devMode = Boolean.parseBoolean(System.getProperty(DEV) == null ? config.getInitParameter(DEV) : System.getProperty(DEV));
+        useOldDataAssignments = Boolean.parseBoolean(System.getProperty(USEOLDDATAASSIGNMENTS) == null ? config.getInitParameter(USEOLDDATAASSIGNMENTS) : System.getProperty(USEOLDDATAASSIGNMENTS));
+        preProcess = Boolean.parseBoolean(System.getProperty(PREPROCESS) == null ? config.getInitParameter(PREPROCESS) : System.getProperty(PREPROCESS));
+        skin = System.getProperty(SKIN) == null ? config.getInitParameter(SKIN) : System.getProperty(SKIN);
+        designerVersion = readDesignerVersion(config.getServletContext());
+        showPDFDoc = doShowPDFDoc(config);
+        serviceRepo = System.getProperty(SERVICE_REPO) == null ? config.getInitParameter(SERVICE_REPO) : System.getProperty(SERVICE_REPO);
+        serviceRepoTasks = System.getProperty(SERVICE_REPO_TASKS) == null ? config.getInitParameter(SERVICE_REPO_TASKS) : System.getProperty(SERVICE_REPO_TASKS);
 
         String editor_file = config.
-                getServletContext().getRealPath(designer_path + "editor.st");
+                getServletContext().getRealPath(DESIGNER_PATH + "editor.st");
         try {
-            _doc = readFile(editor_file);
+            doc = readFile(editor_file);
         } catch (Exception e) {
             throw new ServletException(
-                    "Error while parsing editor.st", e);
+                    "Error while parsing editor.st",
+                    e);
         }
-        if (_doc == null) {
-            _logger.error("Invalid editor.st, " +
-                    "could not be read as a document.");
+        if (doc == null) {
+            logger.error("Invalid editor.st, " +
+                                 "could not be read as a document.");
             throw new ServletException("Invalid editor.st, " +
-                    "could not be read as a document.");
+                                               "could not be read as a document.");
         }
     }
 
-
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doGet(request, response);
+    @Override
+    public void doPost(HttpServletRequest request,
+                       HttpServletResponse response) throws ServletException, IOException {
+        doGet(request,
+              response);
     }
 
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+    @Override
+    public void doGet(HttpServletRequest request,
+                      HttpServletResponse response)
             throws ServletException, IOException {
-        String profileName = request.getParameter("profile");
-        String projectId = request.getParameter("projectId");
-        String procDefId = request.getParameter("procDefId");
-        String studioApiUrl = request.getParameter("studioApiUrl");
-        String studioClientUrl = request.getParameter("studioClientUrl");
-        String token = request.getParameter("token");
-        String uuid = request.getParameter("uuid");
+        String profileName = Utils.getDefaultProfileName(request.getParameter("profile"));
+        String uuid = Utils.getUUID(request);
+
         String editorID = request.getParameter("editorid");
 
         // passed through via JSNI now
@@ -204,58 +266,72 @@ public class EditorHandler extends HttpServlet {
 //        }
 
         String readOnly = request.getParameter("readonly");
+        String viewLocked = request.getParameter("viewlocked");
+        String sessionId = request.getParameter("sessionId");
 
-
-        if (profileName == null || profileName.length() < 1) {
-            profileName = "jbpm";
+        if (viewLocked == null || viewLocked.length() < 1) {
+            viewLocked = "false";
         }
-        IDiagramProfile profile = _profileService.findProfile(
-                request, profileName);
+
         if (profile == null) {
-            _logger.error("No profile with the name " + profileName
-                    + " was registered");
+            profile = profileService.findProfile(request,
+                                                 profileName);
+        }
+
+        if (profile == null) {
+            logger.error("No profile with the name " + profileName
+                                 + " was registered");
             throw new IllegalArgumentException(
                     "No profile with the name " + profileName +
                             " was registered");
         }
 
         IDiagramPreprocessingUnit preprocessingUnit = null;
-        if (_preProcess) {
-            if (_logger.isInfoEnabled()) {
-                _logger.info(
+        if (preProcess) {
+            if (logger.isInfoEnabled()) {
+                logger.info(
                         "Performing diagram information pre-processing steps. ");
             }
-            preprocessingUnit = _preProcessingService.findPreprocessingUnit(request, profile);
-            preprocessingUnit.preprocess(request, response, profile, getServletContext(), Boolean.parseBoolean(readOnly));
+            preprocessingUnit = preProcessingService.findPreprocessingUnit(request,
+                                                                           profile);
+            preprocessingUnit.preprocess(request,
+                                         response,
+                                         profile,
+                                         getServletContext(),
+                                         Boolean.parseBoolean(readOnly),
+                                         Boolean.parseBoolean(viewLocked),
+                                         ioService,
+                                         descriptor);
         }
 
         //output env javascript files
         JSONArray scriptsArray;
-        if (_devMode) {
+        if (devMode) {
             scriptsArray = new JSONArray();
-            for (String nextScript : _envFiles) {
-                scriptsArray.put(designer_path + nextScript);
+            for (String nextScript : envFiles) {
+                scriptsArray.put(DESIGNER_PATH + nextScript);
             }
-
         } else {
             scriptsArray = new JSONArray();
-            scriptsArray.put(designer_path + "jsc/env_combined.js");
+            scriptsArray.put(DESIGNER_PATH + "jsc/env_combined.js");
         }
 
         // generate script tags for plugins.
         // they are located after the initialization script.
 
-        if (_pluginfiles.get(profileName) == null) {
+        if (pluginFiles.get(profileName) == null) {
             List<IDiagramPlugin> compressed = new ArrayList<IDiagramPlugin>();
             List<IDiagramPlugin> uncompressed = new ArrayList<IDiagramPlugin>();
-            _pluginfiles.put(profileName, compressed);
-            _uncompressedPlugins.put(profileName, uncompressed);
+            pluginFiles.put(profileName,
+                            compressed);
+            uncompressedPlugins.put(profileName,
+                                    uncompressed);
             for (String pluginName : profile.getPlugins()) {
-                IDiagramPlugin plugin = _pluginService.findPlugin(request,
-                        pluginName);
+                IDiagramPlugin plugin = pluginservice.findPlugin(request,
+                                                                 pluginName);
                 if (plugin == null) {
-                    _logger.warn("Could not find the plugin " + pluginName +
-                            " requested by the profile " + profile.getName());
+                    logger.warn("Could not find the plugin " + pluginName +
+                                        " requested by the profile " + profile.getName());
                     continue;
                 }
                 if (plugin.isCompressable()) {
@@ -264,59 +340,94 @@ public class EditorHandler extends HttpServlet {
                     uncompressed.add(plugin);
                 }
             }
-
         }
 
         JSONArray pluginsArray = new JSONArray();
-        if (_devMode) {
-            for (IDiagramPlugin jsFile : _pluginfiles.get(profileName)) {
+        if (devMode) {
+            for (IDiagramPlugin jsFile : pluginFiles.get(profileName)) {
                 pluginsArray.put("/plugin/" + jsFile.getName() + ".js");
             }
         } else {
-            pluginsArray.put(designer_path + "jsc/plugins_" + profileName + ".js");
+            pluginsArray.put(DESIGNER_PATH + "jsc/plugins_" + profileName + ".js");
         }
 
         for (IDiagramPlugin uncompressed :
-                _uncompressedPlugins.get(profileName)) {
-            pluginsArray.put(designer_path + "plugin/" + uncompressed.getName() + ".js");
+                uncompressedPlugins.get(profileName)) {
+            pluginsArray.put(DESIGNER_PATH + "plugin/" + uncompressed.getName() + ".js");
         }
 
-        ST editorTemplate = new ST(_doc, '$', '$');
-        editorTemplate.add("editorprofile", profileName);
-        editorTemplate.add("editoruuid", uuid);
-        editorTemplate.add("editorid", editorID);
+        editorTemplate = new ST(doc,
+                                '$',
+                                '$');
+        editorTemplate.add("bopen",
+                           "{");
+        editorTemplate.add("bclose",
+                           "}");
+        editorTemplate.add("editorprofile",
+                           profileName);
+        editorTemplate.add("editoruuid",
+                           uuid);
+        editorTemplate.add("editorid",
+                           editorID);
+        editorTemplate.add("sessionid",
+                           sessionId);
+        editorTemplate.add("instanceviewmode",
+                           getInstanceViewMode(request));
         //editorTemplate.add("activenodes", activeNodes);
         //editorTemplate.add("completednodes", completedNodes);
         //editorTemplate.add("processsource", encodedProcessSource);
-        editorTemplate.add("readonly", readOnly);
-        editorTemplate.add("allscripts", scriptsArray.toString());
-        editorTemplate.add("allplugins", pluginsArray.toString());
-        editorTemplate.add("title", profile.getTitle());
-        editorTemplate.add("stencilset", profile.getStencilSet());
-        editorTemplate.add("debug", _devMode);
-        editorTemplate.add("projectId", projectId);
-        editorTemplate.add("procDefId", procDefId);
-        editorTemplate.add("token", token);
-        editorTemplate.add("studioApiUrl", studioApiUrl);
-        editorTemplate.add("studioClientUrl", studioClientUrl);
-        editorTemplate.add("preprocessing", preprocessingUnit == null ? "" : preprocessingUnit.getOutData());
-        editorTemplate.add("externalprotocol", RepositoryInfo.getRepositoryProtocol(profile) == null ? "" : RepositoryInfo.getRepositoryProtocol(profile));
-        editorTemplate.add("externalhost", RepositoryInfo.getRepositoryHost(profile));
-        editorTemplate.add("externalsubdomain", RepositoryInfo.getRepositorySubdomain(profile) != null ? RepositoryInfo.getRepositorySubdomain(profile).substring(0,
-                RepositoryInfo.getRepositorySubdomain(profile).indexOf("/")) : "");
-        editorTemplate.add("repositoryid", "designer");
-        editorTemplate.add("localhistoryenabled", profile.getLocalHistoryEnabled());
-        editorTemplate.add("localhistorytimeout", profile.getLocalHistoryTimeout());
-        editorTemplate.add("designerversion", _designerVersion);
-        editorTemplate.add("storesvgonsave", profile.getStoreSVGonSaveOption());
-        editorTemplate.add("defaultSkin", designer_path + "css/theme-default.css");
-        editorTemplate.add("presetperspective", System.getProperty(PRESET_PERSPECTIVE) == null ? "" : System.getProperty(PRESET_PERSPECTIVE));
+        editorTemplate.add("readonly",
+                           readOnly);
+        editorTemplate.add("viewlocked",
+                           viewLocked);
+        editorTemplate.add("allscripts",
+                           scriptsArray.toString());
+        editorTemplate.add("allplugins",
+                           pluginsArray.toString());
+        editorTemplate.add("title",
+                           profile.getTitle());
+        editorTemplate.add("stencilset",
+                           profile.getStencilSet());
+        editorTemplate.add("debug",
+                           devMode);
+        editorTemplate.add("useolddataassignments",
+                           useOldDataAssignments);
+        editorTemplate.add("preprocessing",
+                           preprocessingUnit == null ? "" : preprocessingUnit.getOutData());
+        editorTemplate.add("externalprotocol",
+                           RepositoryInfo.getRepositoryProtocol(profile) == null ? "" : RepositoryInfo.getRepositoryProtocol(profile));
+        editorTemplate.add("externalhost",
+                           RepositoryInfo.getRepositoryHost(profile));
+        editorTemplate.add("externalsubdomain",
+                           RepositoryInfo.getRepositorySubdomain(profile) != null ? RepositoryInfo.getRepositorySubdomain(profile).substring(0,
+                                                                                                                                             RepositoryInfo.getRepositorySubdomain(profile).indexOf("/")) : "");
+        editorTemplate.add("repositoryid",
+                           "designer");
+        editorTemplate.add("localhistoryenabled",
+                           profile.getLocalHistoryEnabled());
+        editorTemplate.add("localhistorytimeout",
+                           profile.getLocalHistoryTimeout());
+        editorTemplate.add("designerversion",
+                           designerVersion);
+        editorTemplate.add("showpdfdoc",
+                           showPDFDoc);
+        editorTemplate.add("storesvgonsave",
+                           getCheckedStoreSVGOnSaveOption(profile));
+        editorTemplate.add("defaultSkin",
+                           DESIGNER_PATH + "css/theme-default.css");
+        editorTemplate.add("presetperspective",
+                           System.getProperty(PRESET_PERSPECTIVE) == null ? "" : System.getProperty(PRESET_PERSPECTIVE));
+        editorTemplate.add("bpsimdisplay",
+                           profile.getBpsimDisplay());
+        editorTemplate.add("formstype",
+                           profile.getFormsType());
 
         String overlaySkin = "";
-        if (_skin != null && !_skin.equals("default")) {
-            overlaySkin = designer_path + "css/theme-" + _skin + ".css";
+        if (skin != null && !skin.equals("default")) {
+            overlaySkin = DESIGNER_PATH + "css/theme-" + skin + ".css";
         }
-        editorTemplate.add("overlaySkin", overlaySkin);
+        editorTemplate.add("overlaySkin",
+                           overlaySkin);
 
         StringBuilder plugins = new StringBuilder();
         boolean commaNeeded = false;
@@ -328,7 +439,8 @@ public class EditorHandler extends HttpServlet {
             }
             plugins.append("\"").append(ext).append("\"");
         }
-        editorTemplate.add("profileplugins", plugins.toString());
+        editorTemplate.add("profileplugins",
+                           plugins.toString());
 
         StringBuilder ssexts = new StringBuilder();
         commaNeeded = false;
@@ -340,9 +452,16 @@ public class EditorHandler extends HttpServlet {
             }
             ssexts.append("\"").append(ext).append("\"");
         }
-        editorTemplate.add("ssextensions", ssexts.toString());
+        editorTemplate.add("ssextensions",
+                           ssexts.toString());
 
-        editorTemplate.add("contextroot", request.getContextPath());
+        editorTemplate.add("contextroot",
+                           request.getContextPath());
+
+        editorTemplate.add("servicerepo",
+                           serviceRepo == null ? "" : serviceRepo);
+        editorTemplate.add("servicerepotasks",
+                           serviceRepoTasks == null ? "" : Arrays.asList(serviceRepoTasks.split(",")));
 
         response.setContentType("text/javascript; charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -350,53 +469,17 @@ public class EditorHandler extends HttpServlet {
     }
 
     /**
-     * @return read the files to be placed as core scripts
-     *         from a configuration file in a json file.
-     * @throws java.io.IOException
-     */
-    private static String readEnvFiles(ServletContext context) throws IOException {
-        FileInputStream core_scripts = new FileInputStream(
-                context.getRealPath(designer_path + "js/js_files.json"));
-        try {
-            ByteArrayOutputStream stream =
-                    new ByteArrayOutputStream();
-            byte[] buffer = new byte[4096];
-            int read;
-            while ((read = core_scripts.read(buffer)) != -1) {
-                stream.write(buffer, 0, read);
-            }
-            return stream.toString();
-        } finally {
-            try {
-                core_scripts.close();
-            } catch (IOException e) {
-                _logger.error(e.getMessage(), e);
-            }
-        }
-    }
-
-    /**
-     * Determine whether the browser is IE
-     *
-     * @param request
-     * @return true: IE browser false: others browsers
-     */
-    private static boolean isIE(HttpServletRequest request) {
-        return request.getHeader("USER-AGENT").
-                toLowerCase().indexOf("msie") > 0;
-    }
-
-    /**
      * Returns the designer version from the manifest.
-     *
      * @param context
      * @return version
      */
-    private static String readDesignerVersion(ServletContext context) {
+    public static String readDesignerVersion(ServletContext context) {
         String retStr = "";
+        BufferedReader br = null;
         try {
             InputStream inputStream = context.getResourceAsStream("/META-INF/MANIFEST.MF");
-            BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+            br = new BufferedReader(new InputStreamReader(inputStream,
+                                                          "UTF-8"));
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith(BUNDLE_VERSION)) {
@@ -406,15 +489,25 @@ public class EditorHandler extends HttpServlet {
             }
             inputStream.close();
         } catch (Exception e) {
-            _logger.error(e.getMessage(), e);
+            logger.error(e.getMessage(),
+                         e);
+        } finally {
+            if (br != null) {
+                IOUtils.closeQuietly(br);
+            }
         }
         return retStr;
     }
 
+    public String getInstanceViewMode(HttpServletRequest request) {
+        String instanceViewMode = request.getParameter("instanceviewmode");
+        return (instanceViewMode != null && instanceViewMode.equals("true")) ? "true" : "false";
+    }
 
     private String readFile(String pathname) throws IOException {
         StringBuilder fileContents = new StringBuilder();
-        Scanner scanner = new Scanner(new File(pathname), "UTF-8");
+        Scanner scanner = new Scanner(new File(pathname),
+                                      "UTF-8");
         String lineSeparator = System.getProperty("line.separator");
         try {
             while (scanner.hasNextLine()) {
@@ -424,5 +517,31 @@ public class EditorHandler extends HttpServlet {
         } finally {
             scanner.close();
         }
+    }
+
+    public boolean doShowPDFDoc(ServletConfig config) {
+        return Boolean.parseBoolean(System.getProperty(SHOW_PDF_DOC) == null ? config.getInitParameter(SHOW_PDF_DOC) : System.getProperty(SHOW_PDF_DOC));
+    }
+
+    public void setProfile(IDiagramProfile profile) {
+        this.profile = profile;
+    }
+
+    public IDiagramProfile getProfile() {
+        return profile;
+    }
+
+    public ST getEditorTemplate() {
+        return editorTemplate;
+    }
+
+    private String getCheckedStoreSVGOnSaveOption(IDiagramProfile profile) {
+        String sysPropOption = System.getProperty(STORE_SVG_ON_SAVE);
+        if (sysPropOption != null) {
+            if ("true".equalsIgnoreCase(sysPropOption) || "false".equalsIgnoreCase(sysPropOption)) {
+                return String.valueOf(Boolean.parseBoolean(sysPropOption));
+            }
+        }
+        return profile.getStoreSVGonSaveOption();
     }
 }

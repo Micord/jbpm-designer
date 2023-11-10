@@ -155,6 +155,14 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
 			jsonProp.simulation = false;
 		}
 
+        if(!jsonProp.boundaryonly) {
+            jsonProp.boundaryonly = false;
+        }
+
+        if(!jsonProp.customassignment) {
+            jsonProp.customassignment = false;
+        }
+
         if(!jsonProp.display) {
             jsonProp.display = false;
         }
@@ -234,6 +242,14 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
 		return this._jsonProp.simulation;
 	},
 
+    boundaryonly : function() {
+        return this._jsonProp.boundaryonly;
+    },
+
+    customassignment : function() {
+        return this._jsonProp.customassignment;
+    },
+
     display : function() {
         return this._jsonProp.display;
     },
@@ -246,9 +262,17 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
 		this._jsonProp.popular = true;
 	},
 	
-	setSimulation: function() {
+	setSimulation : function() {
 		this._jsonProp.simulation = true;
 	},
+
+    setBoundaryonly : function() {
+        this._jsonProp.boundaryonly = true;
+    },
+
+    setCustomassignment : function() {
+        this._jsonProp.customassignment = true;
+    },
 
     setDisplay: function() {
         this._jsonProp.display = true;

@@ -1,11 +1,11 @@
-/**
- * Copyright 2012 JBoss Inc
+/*
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -70,6 +70,10 @@ public class ExpressionParser {
 
     public int getParseIndex() {
         return parseIndex;
+    }
+
+    public int getExpressionCount() {
+        return expressionCount;
     }
 
     static {
@@ -151,7 +155,9 @@ public class ExpressionParser {
         functionNamesBuilder.append("{");
         boolean first = true;
         for (String functionName : functionsRegistry.keySet()) {
-            if (!first) functionNamesBuilder.append(", ");
+            if (!first) {
+                functionNamesBuilder.append(", ");
+            }
             functionNamesBuilder.append(functionName);
             first = false;
         }
@@ -166,13 +172,6 @@ public class ExpressionParser {
 
     public List<String> getErrorMessages() {
         return errorMessages;
-    }
-
-    public boolean checkOnCustomExpression(String expression) {
-        int negativeExpressionCount = count(expression, "!" + KIE_FUNCTIONS);
-        int expressionCount = count(expression, KIE_FUNCTIONS);
-        return negativeExpressionCount > 0 || expressionCount != 1 || expression.contains("&&")
-               || expression.contains("||");
     }
 
     public ConditionExpression parse() throws ParseException {
@@ -193,11 +192,12 @@ public class ExpressionParser {
                     functionName = functionName.substring(KIE_FUNCTIONS.length(), functionName.length());
                     functionDef = functionsRegistry.get(functionName);
 
-                    if (functionDef == null)
+                    if (functionDef == null) {
                         throw new ParseException(
                             errorMessage(FUNCTION_NAME_NOT_RECOGNIZED_ERROR, functionName),
                             parseIndex
                         );
+                    }
 
                     conditionExpression.setOperator(ConditionExpression.AND_OPERATOR);
                     condition = new Condition(this.functionName);
@@ -234,7 +234,9 @@ public class ExpressionParser {
 
     private String parseFunctionName(String expression) throws ParseException{
         parseIndex = nextNonBlank(expression);
-        if (parseIndex < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
+        if (parseIndex < 0) {
+            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
+        }
         String functionName = null;
 
         for(FunctionDef functionDef : functionsRegistry.values()) {
@@ -252,7 +254,9 @@ public class ExpressionParser {
     private void parseReturnSentence() throws ParseException {
 
         int index = nextNonBlank();
-        if (index < 0) throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR, "return"), parseIndex);
+        if (index < 0) {
+            throw new ParseException(errorMessage(RETURN_SENTENCE_EXPECTED_ERROR, "return"), parseIndex);
+        }
 
         if (!expression.startsWith("return", index)) {
             //the expression does not start with return.
@@ -263,14 +267,17 @@ public class ExpressionParser {
         } else {
             parseIndex = index + "return".length();
             if (!isBlank(expression.charAt(parseIndex))) errorMessages.add(errorMessage(BLANK_AFTER_RETURN_EXPECTED_ERROR,"return"));
-            expression = expression.substring(parseIndex, expression.length());
-            parseIndex = 0;
         }
+
+        expression = expression.substring(parseIndex, expression.length());
+        parseIndex = 0;
     }
 
     private List<String> parseExpression() throws ParseException {
         int index = nextNonBlank();
-        if (index < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
+        if (index < 0) {
+            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_FOUND_ERROR), parseIndex);
+        }
         expression = expression.trim();
         ArrayList<String> expressionsList = new ArrayList<String>();
         if (expression.startsWith(KIE_FUNCTIONS) || expression.startsWith("!" + KIE_FUNCTIONS)) {
@@ -314,20 +321,26 @@ public class ExpressionParser {
 
     private void parseFunctionClose(String expression) throws ParseException {
         parseIndex = expression.length() - 1;
-        if (parseIndex < 0) throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+        if (parseIndex < 0) {
+            throw new ParseException(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+        }
 
         if (expression.charAt(parseIndex) != ')') errorMessages.add(errorMessage(FUNCTION_CALL_NOT_CLOSED_PROPERLY_ERROR));
     }
 
     private void parseSentenceClose() throws ParseException {
         int index = expression.length() - 1;
-        if (index < 0) throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+        if (index < 0) {
+            throw new ParseException(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR), parseIndex);
+        }
 
         if (expression.charAt(index) != ';') errorMessages.add(errorMessage(SENTENCE_NOT_CLOSED_PROPERLY_ERROR));
     }
 
     private String parseVariableName(String expression) throws ParseException {
-        if (parseIndex < 0) throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
+        if (parseIndex < 0) {
+            throw new ParseException(errorMessage(VARIABLE_NAME_EXPECTED_ERROR), parseIndex);
+        }
         parseIndex = parseIndex + 1;
 
         Pattern variableNameParam = Pattern.compile(VARIABLE_NAME_PARAM_REGEX);
@@ -348,7 +361,9 @@ public class ExpressionParser {
 
     private void parseParamDelimiter(String expression) throws ParseException {
         parseIndex = nextNonBlank(expression);
-        if (parseIndex < 0) throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
+        if (parseIndex < 0) {
+            throw new ParseException(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR), parseIndex);
+        }
 
         if (expression.charAt(parseIndex) != ',') {
            errorMessages.add(errorMessage(PARAMETER_DELIMITER_EXPECTED_ERROR));
@@ -359,7 +374,9 @@ public class ExpressionParser {
 
     private String parseStringParameter(String expression) throws ParseException {
         parseIndex = nextNonBlank(expression);
-        if (parseIndex < 0) throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
+        if (parseIndex < 0) {
+            throw new ParseException(STRING_PARAMETER_EXPECTED_ERROR, parseIndex);
+        }
 
         if (expression.charAt(parseIndex) != '"') {
             errorMessages.add(errorMessage(STRING_PARAMETER_EXPECTED_ERROR));

@@ -8,7 +8,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
 	construct: function(facade){
 		this.facade = facade;
 
-        if(ORYX.READONLY != true) {
+        if(!(ORYX.READONLY == true || ORYX.VIEWLOCKED == true)) {
             this.facade.offer({
                 'name': ORYX.I18N.View.sim.processPathsTitle,
                 'functionality': this.findPaths.bind(this),
@@ -20,14 +20,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
                 'minShape': 0,
                 'maxShape': 0,
                 'isEnabled': function(){
-                    return ORYX.READONLY != true;
-    //				profileParamName = "profile";
-    //				profileParamName = profileParamName.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-    //				regexSa = "[\\?&]"+profileParamName+"=([^&#]*)";
-    //		        regexa = new RegExp( regexSa );
-    //		        profileParams = regexa.exec( window.location.href );
-    //		        profileParamValue = profileParams[1];
-    //				return profileParamValue == "jbpm";
+                    return !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true) && ORYX.BPSIMDISPLAY == true;
                 }.bind(this)
             });
 
@@ -42,14 +35,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
                 'minShape': 0,
                 'maxShape': 0,
                 'isEnabled': function(){
-                    return ORYX.READONLY != true;
-    //				profileParamName = "profile";
-    //				profileParamName = profileParamName.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-    //				regexSa = "[\\?&]"+profileParamName+"=([^&#]*)";
-    //		        regexa = new RegExp( regexSa );
-    //		        profileParams = regexa.exec( window.location.href );
-    //		        profileParamValue = profileParams[1];
-    //				return profileParamValue == "jbpm";
+                    return !(ORYX.READONLY == true || ORYX.VIEWLOCKED == true) && ORYX.BPSIMDISPLAY == true;
                 }.bind(this)
             });
         }
@@ -113,11 +99,11 @@ ORYX.Plugins.Simulation = Clazz.extend({
                         title       : ''
 
                     });
-	            },
+	            }.bind(this),
 	            params: {
 	            	action: 'getpathinfo',
 	            	profile: ORYX.PROFILE,
-	            	json: ORYX.EDITOR.getSerializedJSON(),
+	            	json: window.btoa(encodeURIComponent(ORYX.EDITOR.getSerializedJSON())),
 	            	ppdata: ORYX.PREPROCESSING,
 	            	sel: ""
 	            }
@@ -198,7 +184,9 @@ ORYX.Plugins.Simulation = Clazz.extend({
     	   		    		cindex++;
     	   		    	}
     	   		    	processpathsStore.commitChanges();
-    		            
+
+						var dialogSize = ORYX.Utils.getDialogSize(200, 330);
+						var smallColWidth = (dialogSize.width - 80) / 5;
     		            var gridId = Ext.id();
     		        	var grid = new Ext.grid.EditorGridPanel({
     		                store: processpathsStore,
@@ -207,7 +195,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
     		                cm: new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(), {
     		                	id: 'display',
     		                    header: ORYX.I18N.View.sim.dispColor,
-    		                    width: 90,
+    		                    width: smallColWidth * 2,
     		                    dataIndex: 'display',
     		                    renderer: function(val) {
 		                    	  if(val) { 
@@ -219,7 +207,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
     		                }, {
     		                	id: 'numele',
     		                    header: ORYX.I18N.View.sim.numElements,
-    		                    width: 130,
+    		                    width: smallColWidth * 3,
     		                    dataIndex: 'numele',
     		                    renderer: function(val) {
   		                    	  if(val) { 
@@ -234,7 +222,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
     		        	
     	   				var processPathsPanel = new Ext.Panel({
     		        		id: 'processPathsPanel',
-    		        		title: '<center>' + ORYX.I18N.View.sim.select + wintitle + ORYX.I18N.View.sim.display + '</center>',
+    		        		title: '<center>' + ORYX.I18N.View.sim.select + wintitle + ' ' + ORYX.I18N.View.sim.display + '</center>',
     		        		layout:'column',
     		        		items:[
     		        		       grid
@@ -252,8 +240,8 @@ ORYX.Plugins.Simulation = Clazz.extend({
     		    			layout		: 'anchor',
     		    			autoCreate	: true, 
     		    			title		: wintitle, 
-    		    			height		: 200, 
-    		    			width		: 300, 
+    		    			height		: dialogSize.height,
+    		    			width		: dialogSize.width,
     		    			modal		: true,
     		    			collapsible	: false,
     		    			fixedcenter	: true, 
@@ -329,11 +317,11 @@ ORYX.Plugins.Simulation = Clazz.extend({
                     title       : ''
 
                 });
-            },
+            }.bind(this),
             params: {
             	action: 'getpathinfo',
             	profile: ORYX.PROFILE,
-            	json: ORYX.EDITOR.getSerializedJSON(),
+            	json: window.btoa(encodeURIComponent(ORYX.EDITOR.getSerializedJSON())),
             	ppdata: ORYX.PREPROCESSING,
             	sel: selectedId
             }
@@ -437,9 +425,13 @@ ORYX.Plugins.Simulation = Clazz.extend({
 		}
 	},
 	runSimulation : function() {
+		var dialogSize = ORYX.Utils.getDialogSize(300, 350);
+		var labelWidth = dialogSize.width / 2;
+		var fieldWidth = dialogSize.width / 3;
+
 		var simform = new Ext.form.FormPanel({
 			baseCls: 		'x-plain',
-	        labelWidth: 	150,
+	        labelWidth: 	labelWidth,
 	        defaultType: 	'numberfield',
 	        items: [{
 	        	fieldLabel: ORYX.I18N.View.sim.numInstances,
@@ -447,7 +439,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
 	            allowBlank:false,
 	            allowDecimals:false,
 	            minValue:1,
-	            width: 120
+	            width: fieldWidth
 	        },
 	        {
 	        	fieldLabel: ORYX.I18N.View.sim.interval,
@@ -455,7 +447,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
 	            allowBlank:false,
 	            allowDecimals:false,
 	            minValue:1,
-	            width: 120
+	            width: fieldWidth
 	        },
 	        {
                 xtype: 'combo',
@@ -476,20 +468,19 @@ ORYX.Plugins.Simulation = Clazz.extend({
                 value: "minutes",
                 triggerAction: 'all',
                 fieldLabel: ORYX.I18N.View.sim.intervalUnits,
-                width: 120
+                width: fieldWidth
             }
 	        ]
 	    });
-		
-		
-		var dialog = new Ext.Window({ 
+
+		var dialog = new Ext.Window({
 			autoCreate: true, 
 			layout: 	'fit',
 			plain:		true,
 			bodyStyle: 	'padding:5px;',
 			title: 		ORYX.I18N.View.sim.runSim,
-			height: 	300,
-			width:		350,
+			height: 	dialogSize.height,
+			width:		dialogSize.width,
 			modal:		true,
 			fixedcenter:true, 
 			shadow:		true, 
@@ -521,7 +512,7 @@ ORYX.Plugins.Simulation = Clazz.extend({
 				    	   			if(response.responseText && response.responseText.length > 0 && response.status == 200) {
 				    	   				this.facade.raiseEvent({
 				    	   		            type: ORYX.CONFIG.EVENT_SIMULATION_SHOW_RESULTS,
-				    	   		            results: response.responseText
+				    	   		            results: decodeURIComponent(window.atob(response.responseText))
 				    	   		        });
 				    	   			} else {
                                            this.facade.raiseEvent({
@@ -533,32 +524,55 @@ ORYX.Plugins.Simulation = Clazz.extend({
                                            });
 				    	   			}
 				    	   		} catch(e) {
-                                       this.facade.raiseEvent({
-                                           type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                           ntype		: 'error',
-                                           msg         : ORYX.I18N.View.sim.unableToPerform + e,
-                                           title       : ''
+									this.facade.raiseEvent({
+										type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+										ntype		: 'error',
+										msg         : ORYX.I18N.View.sim.unableToPerform + e,
+										title       : ''
 
-                                       });
+									});
 				    	   		}
 				            }.bind(this),
 				            failure: function(response){
-                                this.facade.raiseEvent({
-                                    type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
-                                    ntype		: 'error',
-                                    msg         : ORYX.I18N.View.sim.unableToPerform + response.responseText,
-                                    title       : ''
+								if(response.responseText && response.responseText == "showinvalid") {
+									var dialogSize = ORYX.Utils.getDialogSize(250, 400);
+									var cf = new Ext.form.TextArea({
+										id:"unabletorunsim",
+										fieldLabel:ORYX.I18N.View.sim.unableToPerform,
+										width:dialogSize.width,
+										height:dialogSize.height,
+										value:ORYX.I18N.View.sim.unableToPerformMsg
+									});
 
-                                });
+									var win = new Ext.Window({
+										width:dialogSize.width,
+										id:'unabletorunsimwin',
+										height:dialogSize.height,
+										layout: 'fit',
+										autoScroll:true,
+										title:ORYX.I18N.View.sim.unableToPerform,
+										items: [cf]
+									});
+									win.show();
+								} else {
+									this.facade.raiseEvent({
+										type 		: ORYX.CONFIG.EVENT_NOTIFICATION_SHOW,
+										ntype		: 'error',
+										msg         : ORYX.I18N.View.sim.unableToPerform + response.responseText,
+										title       : ''
+
+									});
+								}
 				            }.bind(this),
 				            params: {
 				            	action: 'runsimulation',
 				            	profile: ORYX.PROFILE,
-				            	json: ORYX.EDITOR.getSerializedJSON(),
+				            	json: window.btoa(encodeURIComponent(ORYX.EDITOR.getSerializedJSON())),
 				            	ppdata: ORYX.PREPROCESSING,
 				            	numinstances: instancesInput,
 				            	interval: intervalInput,
-				            	intervalunit: intervalUnit
+				            	intervalunit: intervalUnit,
+								language: ORYX.I18N.Language
 				            }
 				        });
 					}.bind(this)

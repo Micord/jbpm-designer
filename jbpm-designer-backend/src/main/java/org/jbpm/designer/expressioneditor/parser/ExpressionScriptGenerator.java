@@ -1,11 +1,11 @@
-/**
- * Copyright 2012 JBoss Inc
+/*
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,18 @@
 
 package org.jbpm.designer.expressioneditor.parser;
 
+import java.lang.reflect.Method;
+import java.util.List;
+
+import org.drools.core.util.KieFunctions;
 import org.jbpm.designer.expressioneditor.model.Condition;
 import org.jbpm.designer.expressioneditor.model.ConditionExpression;
 import org.jbpm.designer.expressioneditor.server.ExpressionEditorErrors;
 
-import java.util.List;
-
-
 public class ExpressionScriptGenerator {
 
-
-    public String generateScript(ConditionExpression expression, List<String> errors) {
+    public String generateScript(ConditionExpression expression,
+                                 List<String> errors) {
 
         StringBuilder script = new StringBuilder();
         String operator = null;
@@ -47,12 +48,15 @@ public class ExpressionScriptGenerator {
         }
 
         for (Condition condition : expression.getConditions()) {
-            if (addConditionToScript(condition, script, operator, validTerms, errors) > 0) {
+            if (addConditionToScript(condition,
+                                     script,
+                                     operator,
+                                     validTerms,
+                                     errors) > 0) {
                 validTerms++;
             } else {
                 //we have an invalid condition.
                 //at the moment the approach is that all the generation fails.
-                errors.add(ExpressionEditorErrors.INVALID_CONDITION_ERROR);
                 return null;
             }
         }
@@ -60,10 +64,17 @@ public class ExpressionScriptGenerator {
         return "return " + script.toString() + ";";
     }
 
-    private int addConditionToScript(final Condition condition, final StringBuilder script, final String operator, final int validTerms, final List<String> errors) {
-        if (condition == null) return 0;
+    private int addConditionToScript(final Condition condition,
+                                     final StringBuilder script,
+                                     final String operator,
+                                     final int validTerms,
+                                     final List<String> errors) {
+        if (condition == null) {
+            errors.add(ExpressionEditorErrors.INVALID_CONDITION_ERROR);
+            return 0;
+        }
         if (!isValidFunction(condition.getFunction())) {
-            errors.add("Invalid function : " + condition.getFunction());
+            errors.add("Invalid function: " + condition.getFunction());
             return 0;
         }
         //TODO evaluate if we put more validations.
@@ -72,7 +83,8 @@ public class ExpressionScriptGenerator {
         } else {
             script.append(" ");
         }
-        script.append(ExpressionParser.KIE_FUNCTIONS + condition.getFunction().trim());
+        String function = condition.getFunction().trim();
+        script.append(ExpressionParser.KIE_FUNCTIONS + function);
         script.append("(");
         boolean first = true;
         for (String param : condition.getParameters()) {
@@ -84,7 +96,11 @@ public class ExpressionScriptGenerator {
                 //the other parameters are always string parameters.
                 //TODO escape " and line break charactrers.
                 script.append(", ");
-                script.append("\""+escapeStringParam(param)+"\"");
+                script.append("\"" + escapeStringParam(param) + "\"");
+            }
+            if (param == null || param.isEmpty()) {
+                errors.add(ExpressionEditorErrors.PARAMETER_NULL_EMPTY);
+                return 0;
             }
         }
         script.append(")");
@@ -92,33 +108,50 @@ public class ExpressionScriptGenerator {
     }
 
     private String escapeStringParam(String param) {
-        if (param == null) return null;
+        if (param == null) {
+            return null;
+        }
         StringBuilder escapedParam = new StringBuilder(param.length() * 2);
         char c;
         for (int i = 0; i < param.length(); i++) {
             c = param.charAt(i);
             switch (c) {
-                case '"' :
+                case '"':
                     escapedParam.append('\\');
                     escapedParam.append('"');
                     break;
-                case '\n' :
+                case '\n':
                     escapedParam.append('\\');
                     escapedParam.append('n');
                     break;
-                case '\\' :
+                case '\\':
                     escapedParam.append('\\');
                     escapedParam.append('\\');
                     break;
                 default:
                     escapedParam.append(c);
-
             }
         }
         return escapedParam.toString();
     }
 
     private boolean isValidFunction(String function) {
-        return function != null && !"".equals(function.trim());
+        if (function == null) {
+            return false;
+        }
+
+        if (function.trim().isEmpty()) {
+            return false;
+        }
+
+        function = function.trim();
+
+        for (Method method : KieFunctions.class.getMethods()) {
+            if (function.equals(method.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

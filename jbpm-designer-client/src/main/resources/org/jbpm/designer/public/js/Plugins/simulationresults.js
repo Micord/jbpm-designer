@@ -78,7 +78,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
                           </tr> \
                           <tr> \
                           <td><span style="font-size: 10px"><b>' + ORYX.I18N.View.sim.resultsInterval + '</b></span></td> \
-                          <td><span style="font-size: 10px">' + simInfo[0].interval  + '</span></td> \
+                          <td><span style="font-size: 10px">' + this.translateInterval(simInfo[0].interval)  + '</span></td> \
                           </tr> \
                           </table>';
         if(simInfo) {
@@ -113,7 +113,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
                 }});
 			graphTypeChild = new Ext.tree.TreeNode({
 				id:"pgraph:processaverages",
-				text:processSimInfo[0].name + " (" + processSimInfo[0].id + ")",
+				text:processSimInfo[0].name.replace(/</g,"&lt;").replace(/>/g,"&gt;") + " (" + processSimInfo[0].id + ")",
 				allowDrag:false,
 	    		allowDrop:false,           
 	            expanded: true,
@@ -149,7 +149,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 				var nextHt = htSimInfo[i];
 					graphTypeChild = new Ext.tree.TreeNode({
 						id:"htgraph:" + nextHt.id,
-						text:nextHt.name + " (" + nextHt.id + ")", 			
+						text:nextHt.name.replace(/</g,"&lt;").replace(/>/g,"&gt;") + " (" + nextHt.id + ")",
 						allowDrag:false,
 			    		allowDrop:false,           
 			            expanded: true,
@@ -167,7 +167,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 				this.taskType = this.taskType.replace(/\s/g, "");
 			    graphTypeChild = new Ext.tree.TreeNode({
 					id:"tgraph:" + nextTask.id,
-					text:nextTask.name + " (" + nextTask.id + ")", 				
+					text:nextTask.name.replace(/</g,"&lt;").replace(/>/g,"&gt;") + " (" + nextTask.id + ")",
 					allowDrag:false,
 		    		allowDrop:false,           
 		            expanded: true,
@@ -196,9 +196,10 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
                 }});
 			for (var i = 0; i < pathSimInfo.length; i++) {
 				var nextPath = pathSimInfo[i];
+				var nextPathLabel = nextPath.id.replace('Path', ORYX.I18N.View.sim.resultsPath);
 					graphTypeChild = new Ext.tree.TreeNode({
 						id:"pathgraph:" + nextPath.id,
-						text:"Path " + (i+1) + " (" + nextPath.id + ")", 			
+						text:ORYX.I18N.View.sim.resultsPath + " " + (i+1) + " (" + nextPathLabel + ")",
 						allowDrag:false,
 			    		allowDrop:false,           
 			            expanded: true,
@@ -305,7 +306,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 
         var processJSON = ORYX.EDITOR.getSerializedJSON();
         var simTimeUnit = jsonPath(processJSON.evalJSON(), "$.properties.timeunit");
-        ORYX.EDITOR.simulationChartTimeUnit = simTimeUnit;
+        ORYX.EDITOR.simulationChartTimeUnit = this.getSimTimeUnit(simTimeUnit);
 		ORYX.EDITOR.simulationChartData = jsonObj;
 		ORYX.EDITOR.simulationEventData = jsonSimObjWrapper;
 		ORYX.EDITOR.simulationEventAggregationData = jsonEventAggregationsObj;
@@ -314,7 +315,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
         ORYX.EDITOR.simulationHTResourceData = htrobjarray;
 		ORYX.EDITOR.simulationChartTitle = ORYX.I18N.View.sim.resultsTitlesProcessSimResults;
 		ORYX.EDITOR.simulationChartId = jsonObj[0].id;
-		ORYX.EDITOR.simulationChartNodeName = jsonObj[0].name;
+		ORYX.EDITOR.simulationChartNodeName = jsonObj[0].name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 		Ext.getDom('simchartframe').src = ORYX.BASE_FILE_PATH + "simulation/processchart.jsp";
 
 	},
@@ -327,7 +328,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 				innerWrapper[0] = inner;
                 var processJSON = ORYX.EDITOR.getSerializedJSON();
                 var simTimeUnit = jsonPath(processJSON.evalJSON(), "$.properties.timeunit");
-                ORYX.EDITOR.simulationChartTimeUnit = simTimeUnit;
+                ORYX.EDITOR.simulationChartTimeUnit = this.getSimTimeUnit(simTimeUnit);
 				ORYX.EDITOR.simulationChartData = innerWrapper;
 				ORYX.EDITOR.simulationEventData = innerWrapper[0].timeline;
 				ORYX.EDITOR.simulationChartTitle = ORYX.I18N.View.sim.resultsTitlesTaskSimResults;
@@ -344,7 +345,7 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 			if(inner.id == nodeid) {
                 var processJSON = ORYX.EDITOR.getSerializedJSON();
                 var simTimeUnit = jsonPath(processJSON.evalJSON(), "$.properties.timeunit");
-                ORYX.EDITOR.simulationChartTimeUnit = simTimeUnit;
+                ORYX.EDITOR.simulationChartTimeUnit = this.getSimTimeUnit(simTimeUnit);
 				ORYX.EDITOR.simulationChartData = inner;
 				ORYX.EDITOR.simulationEventData = inner.timeline;
 				ORYX.EDITOR.simulationChartTitle = ORYX.I18N.View.sim.resultsTitlesHumanTaskSimResults;
@@ -358,8 +359,9 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
 		var pathobj = jsonPath(jsonstr.evalJSON(), "$.pathsim.*");
         var processJSON = ORYX.EDITOR.getSerializedJSON();
         var simTimeUnit = jsonPath(processJSON.evalJSON(), "$.properties.timeunit");
-        ORYX.EDITOR.simulationChartTimeUnit = simTimeUnit;
-		ORYX.EDITOR.simulationChartTitle = ORYX.I18N.View.sim.resultsTitlesPathExecutionInfo + " (" + pathid + ")";
+		var i18nPathid = pathid.replace('Path', ORYX.I18N.View.sim.resultsPath)
+        ORYX.EDITOR.simulationChartTimeUnit = this.getSimTimeUnit(simTimeUnit);
+		ORYX.EDITOR.simulationChartTitle = ORYX.I18N.View.sim.resultsTitlesPathExecutionInfo + " (" + i18nPathid + ")";
 		ORYX.EDITOR.simulationPathData = pathobj;
 		ORYX.EDITOR.simulationPathId = pathid;
 		
@@ -441,21 +443,21 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
                         "style": "stroke-width:1;fill:red;font-family:arial;font-weight:bold",
                         "font-size": 10}]
                 );
-                dataMax.textContent = "Max: " + data.values[0].value;
+                dataMax.textContent = ORYX.I18N.View.sim.chartsMax + ": " + data.values[0].value;
 
                 var dataMin = ORYX.Editor.graft("http://www.w3.org/2000/svg", null,
                     ['text', {"id" : "modelmin",
                         "style": "stroke-width:1;fill:blue;font-family:arial;font-weight:bold",
                         "font-size": 10}]
                 );
-                dataMin.textContent = "Min: " + data.values[1].value;
+                dataMin.textContent = ORYX.I18N.View.sim.chartsMin + ": " + data.values[1].value;
 
                 var dataAvg = ORYX.Editor.graft("http://www.w3.org/2000/svg", null,
                     ['text', {"id" : "modelavg",
                         "style": "stroke-width:1;fill:green;font-family:arial;font-weight:bold",
                         "font-size": 10}]
                 );
-                dataAvg.textContent = "Avg: " + data.values[2].value;
+                dataAvg.textContent = ORYX.I18N.View.sim.chartsAverage + ": " + data.values[2].value;
 
                 // overlays
                 this.facade.raiseEvent({
@@ -495,6 +497,34 @@ ORYX.Plugins.SimulationResults = Clazz.extend({
     getDisplayColor : function(cindex) {
         var colors = ["#3399FF", "#FFCC33", "#FF99FF", "#6666CC", "#CCCCCC", "#66FF00", "#FFCCFF", "#0099CC", "#CC66FF", "#FFFF00", "#993300", "#0000CC", "#3300FF","#990000","#33CC00"];
         return colors[cindex];
-    }
-	
+    },
+	getSimTimeUnit : function (timeUnit) {
+	    if (ORYX.I18N.View.sim.chartsTimeUnits[timeUnit] !== undefined) {
+		     return ORYX.I18N.View.sim.chartsTimeUnits[timeUnit];
+	    }
+	    else {
+		    return timeUnit;
+	    }
+    },
+	translateInterval: function(interval) {
+		if (interval) {
+			var iSpace = interval.indexOf(' ');
+			if (iSpace > 0) {
+				var value = interval.substring(0, iSpace);
+				var units = interval.substring(iSpace + 1);
+				units = this.getIntervalTimeUnit(units);
+				return value + ' ' + units;
+			}
+		}
+		return interval;
+	},
+	getIntervalTimeUnit : function (timeUnit) {
+		if (ORYX.I18N.propertyNamesValue[timeUnit] !== undefined) {
+			return ORYX.I18N.propertyNamesValue[timeUnit];
+		}
+		else {
+			return timeUnit;
+		}
+	}
+
 });

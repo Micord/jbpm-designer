@@ -4,10 +4,10 @@
     <profile name="jbpm" stencilset="bpmn2.0jbpm">
         <plugin name="ORYX.Plugins.SelectStencilSetPerspective"/>
         <plugin name="ORYX.Plugins.Toolbar"/>
-        <plugin name="ORYX.Plugins.JPDLMigration"/>
         <plugin name="ORYX.Plugins.ServiceRepoIntegration"/>
         <plugin name="ORYX.Plugins.SavePlugin"/>
         <plugin name="ORYX.Plugins.ShapeMenuPlugin"/>
+        <plugin name="ORYX.Plugins.DataIOEditorPlugin"/>
         <plugin name="ORYX.Plugins.ShapeRepository"/>
         <plugin name="ORYX.Plugins.PropertyWindow"/>
         <plugin name="ORYX.Plugins.CanvasResize"/>
@@ -23,7 +23,8 @@
         <plugin name="ORYX.Plugins.Edit"/>
         <plugin name="ORYX.Plugins.Undo"/>
         <plugin name="ORYX.Plugins.KeysMove"/>
-        <plugin name="ORYX.Plugins.Layouter.EdgeLayouter"/>
+        <!--<plugin name="ORYX.Plugins.Layouter.EdgeLayouter"/>-->
+        <!--<plugin name="ORYX.Plugins.ContainerLayouter" />-->
         <plugin name="ORYX.Plugins.VisualValidation"/>
         <plugin name="ORYX.Plugins.RegexTextEditor"/>
         <plugin name="ORYX.Plugins.ConstraintExpressionEditor"/>
@@ -50,35 +51,13 @@
         <plugin name="ORYX.Plugins.FormEditing"/>
         <plugin name="ORYX.Plugins.DefDeleteManager"/>
         <localhistory enabled="false" timeout="60000"/>
-        <storesvgonsave enabled="false"/>
-        <!--<repository id="vfs">-->
-            <!-- acceptable attributes for parameter
-                name - name of the property
-                value - value of the property
-                system-property - (optional) if set tu true property will be set as JVM system property
-            -->
-            <!-- simple file system based vfs configuration
-            <parameter name="root" value="default:///tmp/designer-repo" />
-            <parameter name="globaldir" value="/global" /> -->
-            <!--<parameter name="name" value="Designer Repository"/>-->
-
-            <!-- git based cfs configuration-->
-            <!--<parameter name="root" value="git://uf-playground" />-->
-            <!--<parameter name="globaldir" value="/global" />-->
-            <!--<parameter name="username" value="guvnorngtestuser1" />-->
-            <!--<parameter name="password" value="test1234" />-->
-            <!--<parameter name="origin" value="https://github.com/guvnorngtestuser1/guvnorng-playground.git" />-->
-            <!--<parameter name="fetch.cmd" value="?fetch" />-->
-            <!--<parameter name="org.kie.nio.git.dir" value="/tmp/designer-git-repo" system-property="true"/>    &ndash;&gt;-->
-        <!--</repository>-->
-	<!--
-        <repository id="guvnor">
-            <property name="protocol" value="http" />
-            <property name="host" value="localhost:8080" />
-            <property name="subdomain" value="drools-guvnor/org.drools.guvnor.Guvnor/oryxeditor" />
-            <property name="usr" value="admin" />
-            <property name="pwd" value="admin" />
-        </repository>
-        -->
+        <storesvgonsave enabled="true"/>
+        <zorder enabled="true"/>
+        <!-- can be overwritten by system prop: org.jbpm.designer.bpsimdisplay -->
+        <bpsimdisplay enabled="true"/>
+        <!-- options are "form" and "frm" for the preview forms editor -->
+        <!-- default empty type means users chose when generating forms-->
+        <!-- can be overwritten by system prop: org.jbpm.designer.formstype-->
+        <forms type=""/>
     </profile>
 </profiles>

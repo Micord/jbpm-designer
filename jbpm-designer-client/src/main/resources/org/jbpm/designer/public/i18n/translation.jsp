@@ -1,19 +1,13 @@
 <%@ page import="java.util.Locale" %>
+<%@ page import="org.apache.commons.lang3.LocaleUtils" %>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/i18n-1.0" prefix="i18n" %>
 <%
-    Locale locale= request.getLocale();
-    try{
-        String localeStr=request.getParameter("locale");
-        if(localeStr!= null && localeStr.length()==2){
-            locale = new Locale(request.getParameter("locale"));
-        }else if(localeStr!= null && localeStr.length()==5){
-
-            locale = new Locale(localeStr.substring(0,2),localeStr.substring(3));
-        }
-
-    } catch(Exception e){
-
-    }
+  Locale locale= null;
+  try{
+    locale = LocaleUtils.toLocale( request.getParameter( "locale" ) );
+  } catch(Exception e){
+    locale= request.getLocale();
+  }
 %>
 <i18n:bundle id="bundle" baseName="org.jbpm.designer.resources.i18n.DesignerConstants"
              locale='<%= locale%>' />
@@ -265,6 +259,13 @@ ORYX.I18N.Edit.copy = '<i18n:message key="ORYX.I18N.Edit.copy">Copy</i18n:messag
 ORYX.I18N.Edit.copyDesc = '<i18n:message key="ORYX.I18N.Edit.copyDesc">Copy the selection into an Designer clipboard</i18n:message>';
 ORYX.I18N.Edit.paste = '<i18n:message key="ORYX.I18N.Edit.paste">Paste</i18n:message>';
 ORYX.I18N.Edit.pasteDesc = '<i18n:message key="ORYX.I18N.Edit.pasteDesc">Paste the Designer clipboard to the canvas</i18n:message>';
+
+ORYX.I18N.Edit.pasteClipboard = '<i18n:message key="ORYX.I18N.Edit.pasteClipboard">Paste from Clipboard</i18n:message>';
+ORYX.I18N.Edit.pasteClipboardDesc = '<i18n:message key="ORYX.I18N.Edit.pasteClipboardDesc">Paste the Designer clipboard to the canvas</i18n:message>';
+
+ORYX.I18N.Edit.pasteLocalStorage = '<i18n:message key="ORYX.I18N.Edit.pasteLocalStorage">Paste from Local Storage</i18n:message>';
+ORYX.I18N.Edit.pasteLocalStorageDesc = '<i18n:message key="ORYX.I18N.Edit.pasteLocalStorageDesc">Paste from Designer Local Storage to the canvas</i18n:message>';
+
 ORYX.I18N.Edit.del = '<i18n:message key="ORYX.I18N.Edit.del">Delete</i18n:message>';
 ORYX.I18N.Edit.delDesc = '<i18n:message key="ORYX.I18N.Edit.delDesc">Delete all selected shapes</i18n:message>';
 
@@ -427,7 +428,7 @@ ORYX.I18N.Grouping.grouping = '<i18n:message key="ORYX.I18N.Grouping.grouping">G
 ORYX.I18N.Grouping.group = '<i18n:message key="ORYX.I18N.Grouping.group">Group</i18n:message>';
 ORYX.I18N.Grouping.groupDesc = '<i18n:message key="ORYX.I18N.Grouping.groupDesc">Groups all selected shapes</i18n:message>';
 ORYX.I18N.Grouping.ungroup = '<i18n:message key="ORYX.I18N.Grouping.ungroup">Ungroup</i18n:message>';
-ORYX.I18N.Grouping.ungroupDesc = '<i18n:message key="ORYX.I18N.Grouping.ungroupDesc">Deletes the group of all selected Shapes</i18n:message>';
+ORYX.I18N.Grouping.ungroupDesc = '<i18n:message key="ORYX.I18N.Grouping.ungroupDesc">Deletes the group of all selected shapes</i18n:message>';
 
 if(!ORYX.I18N.IBPMN2BPMN) ORYX.I18N.IBPMN2BPMN = {};
 
@@ -484,11 +485,15 @@ ORYX.I18N.PropertyWindow.type='<i18n:message key="ORYX.I18N.PropertyWindow.type"
 ORYX.I18N.PropertyWindow.addReassignment='<i18n:message key="ORYX.I18N.PropertyWindow.addReassignment">Add Reassignment</i18n:message>';
 ORYX.I18N.PropertyWindow.editorForReassignment='<i18n:message key="ORYX.I18N.PropertyWindow.editorForReassignment">Editor for Reassignments</i18n:message>';
 ORYX.I18N.PropertyWindow.importType='<i18n:message key="ORYX.I18N.PropertyWindow.importType">Import Type</i18n:message>';
+ORYX.I18N.PropertyWindow.caseRole='<i18n:message key="ORYX.I18N.PropertyWindow.caseRole">Case Role</i18n:message>';
+ORYX.I18N.PropertyWindow.caseCardinality='<i18n:message key="ORYX.I18N.PropertyWindow.caseCardinality">Case Cardinality</i18n:message>';
 ORYX.I18N.PropertyWindow.className='<i18n:message key="ORYX.I18N.PropertyWindow.className">Class Name</i18n:message>';
 ORYX.I18N.PropertyWindow.wsdlLocation='<i18n:message key="ORYX.I18N.PropertyWindow.wsdlLocation">WSDL Location</i18n:message>';
 ORYX.I18N.PropertyWindow.wsdlNamespace='<i18n:message key="ORYX.I18N.PropertyWindow.wsdlNamespace">WSDL Namespace</i18n:message>';
 ORYX.I18N.PropertyWindow.addImport='<i18n:message key="ORYX.I18N.PropertyWindow.addImport">Add Import</i18n:message>';
+ORYX.I18N.PropertyWindow.addCaseRole='<i18n:message key="ORYX.I18N.PropertyWindow.addCaseRole">Add Case Role</i18n:message>';
 ORYX.I18N.PropertyWindow.editorForImports='<i18n:message key="ORYX.I18N.PropertyWindow.editorForImports">Editor for Imports</i18n:message>';
+ORYX.I18N.PropertyWindow.editorForCaseRoles='<i18n:message key="ORYX.I18N.PropertyWindow.editorForCaseRoles">Editor for Case Roles</i18n:message>';
 ORYX.I18N.PropertyWindow.action='<i18n:message key="ORYX.I18N.PropertyWindow.action">Action</i18n:message>';
 ORYX.I18N.PropertyWindow.addAction='<i18n:message key="ORYX.I18N.PropertyWindow.addAction">Add Action</i18n:message>';
 ORYX.I18N.PropertyWindow.editorForActions='<i18n:message key="ORYX.I18N.PropertyWindow.editorForActions">Editor for Actions</i18n:message>';
@@ -512,9 +517,12 @@ ORYX.I18N.PropertyWindow.editorForGlobals='<i18n:message key="ORYX.I18N.Property
 ORYX.I18N.PropertyWindow.addGlobal='<i18n:message key="ORYX.I18N.PropertyWindow.addGlobal">Add Global</i18n:message>';
 ORYX.I18N.PropertyWindow.expressionEditor='<i18n:message key="ORYX.I18N.PropertyWindow.expressionEditor">Expression Editor</i18n:message>';
 ORYX.I18N.PropertyWindow.loadingProcessInf='<i18n:message key="ORYX.I18N.PropertyWindow.loadingProcessInf">Loading Process Information.</i18n:message>';
+ORYX.I18N.PropertyWindow.processAsset='<i18n:message key="ORYX.I18N.PropertyWindow.processAsset">Asset Name</i18n:message>';
 ORYX.I18N.PropertyWindow.processId='<i18n:message key="ORYX.I18N.PropertyWindow.processId">Process Id</i18n:message>';
 ORYX.I18N.PropertyWindow.packageName='<i18n:message key="ORYX.I18N.PropertyWindow.packageName">Package Name</i18n:message>';
-ORYX.I18N.PropertyWindow.selectProcessId='<i18n:message key="ORYX.I18N.PropertyWindow.selectProcessId">Select Process Id and click \"Save\" to select</i18n:message>';
+ORYX.I18N.PropertyWindow.selectProcessId='<i18n:message key="ORYX.I18N.PropertyWindow.selectProcessId">Enter process id or select it from the list, then press \"Save\"</i18n:message>';
+ORYX.I18N.PropertyWindow.enterProcessId='<i18n:message key="ORYX.I18N.PropertyWindow.enterProcessId">Enter process Id</i18n:message>';
+ORYX.I18N.PropertyWindow.selectOrenterProcessIdError='<i18n:message key="ORYX.I18N.PropertyWindow.selectOrenterProcessIdError">Select or enter process Id</i18n:message>';
 ORYX.I18N.PropertyWindow.editorForCalledEvents='<i18n:message key="ORYX.I18N.PropertyWindow.editorForCalledEvents">Editor for Called Elements</i18n:message>';
 ORYX.I18N.PropertyWindow.unableToFindOtherProcess='<i18n:message key="ORYX.I18N.PropertyWindow.unableToFindOtherProcess">Unable to find other processes in package.</i18n:message>';
 ORYX.I18N.PropertyWindow.errorResolvingOtherProcessInfo='<i18n:message key="ORYX.I18N.PropertyWindow.errorResolvingOtherProcessInfo">Error resolving other process info</i18n:message>';
@@ -558,9 +566,14 @@ ORYX.I18N.ShapeMenuPlugin.drag = '<i18n:message key="ORYX.I18N.ShapeMenuPlugin.d
 ORYX.I18N.ShapeMenuPlugin.clickDrag = '<i18n:message key="ORYX.I18N.ShapeMenuPlugin.clickDrag">Click or drag</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.morphMsg = '<i18n:message key="ORYX.I18N.ShapeMenuPlugin.morphMsg">Morph shape</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.addTpProcessDic='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.addTpProcessDic">Add to Process Dictionary</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.showInDocs='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.showInDocs">Show in process Documentation</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.editProps='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.editProps">Edit Shape Properties</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.viewSourceNode='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.viewSourceNode">View Node Source</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.editDataIO='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.editDataIO">Edit Data I/O</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.nameNotSpecified='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.nameNotSpecified">Name not specified.</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.unableToFindNodeSource='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.unableToFindNodeSource">Unable to find node source.</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.elementNotIncludedInDoc='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.elementNotIncludedInDoc">Element not included in documentation.</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.cannotEditPropsOnMultiSelection='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.cannotEditPropsOnMultiSelection">You can only edit properties of a single node at a time.</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.userTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.userTask">User Task</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.sendTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.sendTask">Send Task</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.receiveTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.receiveTask">Receive Task</i18n:message>';
@@ -568,6 +581,47 @@ ORYX.I18N.ShapeMenuPlugin.manualTask='<i18n:message key="ORYX.I18N.ShapeMenuPlug
 ORYX.I18N.ShapeMenuPlugin.serviceTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.serviceTask">Service Task</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.businessRuleTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.businessRuleTask">Business Rule Task</i18n:message>';
 ORYX.I18N.ShapeMenuPlugin.scriptTask='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.scriptTask">Script Task</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.ReusableSubprocess='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.ReusableSubprocess">Reusable</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.MultipleInstanceSubprocess='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.MultipleInstanceSubprocess">Multiple instances</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.Subprocess='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.Subprocess">Embedded</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.AdHocSubprocess='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.AdHocSubprocess">Ad-Hoc</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.Exclusive_Databased_Gateway='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.Exclusive_Databased_Gateway">Data-based Exclusive (XOR)</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EventbasedGateway='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EventbasedGateway">Event-based</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.ParallelGateway='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.ParallelGateway">Parallel</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.InclusiveGateway='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.InclusiveGateway">Inclusive</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.TextAnnotation='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.TextAnnotation">Text Annotation</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.DataObject='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.DataObject">Data Object</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.StartNoneEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartNoneEvent">None</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartMessageEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartMessageEvent">Message</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartTimerEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartTimerEvent">Timer</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartEscalationEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartEscalationEvent">Escalation</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartConditionalEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartConditionalEvent">Conditional</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartErrorEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartErrorEvent">Error</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartCompensationEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartCompensationEvent">Compensation</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.StartSignalEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.StartSignalEvent">Signal</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.EndNoneEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndNoneEvent">None</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndMessageEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndMessageEvent">Message</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndEscalationEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndEscalationEvent">Escalation</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndErrorEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndErrorEvent">Error</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndCancelEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndCancelEvent">Cancel</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndCompensationEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndCompensationEvent">Compensation</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndSignalEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndSignalEvent">Signal</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.EndTerminateEvent='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.EndTerminateEvent">Terminate</i18n:message>';
+
+ORYX.I18N.ShapeMenuPlugin.SequenceFlow='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.SequenceFlow">Sequence Flow</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.Association_Undirected='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.Association_Undirected">Association (undirected)</i18n:message>';
+ORYX.I18N.ShapeMenuPlugin.Association_Unidirectional='<i18n:message key="ORYX.I18N.ShapeMenuPlugin.Association_Unidirectional">Association (unidirectional)</i18n:message>';
+
+if(!ORYX.I18N.DataIOEditorPlugin) ORYX.I18N.DataIOEditorPlugin = {};
+
+ORYX.I18N.DataIOEditorPlugin.VariableDefinitions='<i18n:message key="ORYX.I18N.DataIOEditorPlugin.VariableDefinitions">Variable Definitions</i18n:message>';
+ORYX.I18N.DataIOEditorPlugin.CaseFileDefinitions='<i18n:message key="ORYX.I18N.DataIOEditorPlugin.CaseFileDefinitions">Case Files</i18n:message>';
 
 if(!ORYX.I18N.SimplePnmlexport) ORYX.I18N.SimplePnmlexport = {};
 
@@ -653,8 +707,10 @@ ORYX.I18N.View.headerDocumentation='<i18n:message key="ORYX.I18N.View.headerDocu
 ORYX.I18N.View.headerInput='<i18n:message key="ORYX.I18N.View.headerInput">INPUT PARAMETERS</i18n:message>';
 ORYX.I18N.View.headerResults='<i18n:message key="ORYX.I18N.View.headerResults">RESULTS</i18n:message>';
 ORYX.I18N.View.headerCategory='<i18n:message key="ORYX.I18N.View.headerCategory">CATEGORY</i18n:message>';
+ORYX.I18N.View.headerHandler='<i18n:message key="ORYX.I18N.View.headerHandler">HANDLER</i18n:message>';
 ORYX.I18N.View.clickOnRowToInstall='<i18n:message key="ORYX.I18N.View.clickOnRowToInstall">Service Nodes. doud-click on a row to install.</i18n:message>';
 ORYX.I18N.View.failInstallation='<i18n:message key="ORYX.I18N.View.failInstallation">Failed to install the repository assets.</i18n:message>';
+ORYX.I18N.View.alreadyInstalled='<i18n:message key="ORYX.I18N.View.alreadyInstalled">Service Task already installed.</i18n:message>';
 ORYX.I18N.View.successInstall='<i18n:message key="ORYX.I18N.View.successInstall">Assets successfully installed. Save and re-open your process to start using them.</i18n:message>';
 ORYX.I18N.View.failAssetsInstallation='<i18n:message key="ORYX.I18N.View.failAssetsInstallation">Installing the repository assets failed</i18n:message>';
 ORYX.I18N.View.serviceNodes='<i18n:message key="ORYX.I18N.View.serviceNodes">Service Nodes</i18n:message>';
@@ -667,6 +723,7 @@ ORYX.I18N.View.infogroup = '<i18n:message key="ORYX.I18N.View.infogroup">info</i
 if(!ORYX.I18N.View.tabs) ORYX.I18N.View.tabs = {};
 ORYX.I18N.View.tabs.modelling = '<i18n:message key="ORYX.I18N.View.tabs.modelling">Process Modelling</i18n:message>';
 ORYX.I18N.View.tabs.simResults = '<i18n:message key="ORYX.I18N.View.tabs.simResults">Simulation Results</i18n:message>';
+ORYX.I18N.View.tabs.processDoc = '<i18n:message key="ORYX.I18N.View.tabs.processDoc">Process Documentation</i18n:message>';
 
 if(!ORYX.I18N.View.sim) ORYX.I18N.View.sim = {};
 ORYX.I18N.View.sim.processPaths = '<i18n:message key="ORYX.I18N.View.sim.processPaths">Display Process Paths</i18n:message>';
@@ -687,6 +744,7 @@ ORYX.I18N.View.sim.runSim = '<i18n:message key="ORYX.I18N.View.sim.runSim">Run P
 ORYX.I18N.View.sim.runningSim = '<i18n:message key="ORYX.I18N.View.sim.runningSim">Running Process Simulation...</i18n:message>';
 ORYX.I18N.View.sim.simNoResults = '<i18n:message key="ORYX.I18N.View.sim.simNoResults">Simulation engine did not return results: </i18n:message>';
 ORYX.I18N.View.sim.unableToPerform = '<i18n:message key="ORYX.I18N.View.sim.unableToPerform">Unable to perform simulation:</i18n:message>';
+ORYX.I18N.View.sim.unableToPerformMsg = '<i18n:message key="ORYX.I18N.View.sim.unableToPerformMsg">The process may have unstructured loops where one instance of a loop is not finished before another is started. Simulation currently does not support such processes.</i18n:message>';
 ORYX.I18N.View.sim.resultsInfo = '<i18n:message key="ORYX.I18N.View.sim.resultsInfo">Simulation Info</i18n:message>';
 ORYX.I18N.View.sim.resultsGraphs = '<i18n:message key="ORYX.I18N.View.sim.resultsGraphs">Simulation Graphs</i18n:message>';
 ORYX.I18N.View.sim.resultsProcessId = '<i18n:message key="ORYX.I18N.View.sim.resultsProcessId">Process id: </i18n:message>';
@@ -696,6 +754,8 @@ ORYX.I18N.View.sim.resultsSimStartTime = '<i18n:message key="ORYX.I18N.View.sim.
 ORYX.I18N.View.sim.resultsSimEndTime = '<i18n:message key="ORYX.I18N.View.sim.resultsSimEndTime">Simulation end: </i18n:message>';
 ORYX.I18N.View.sim.resultsNumOfExecutions = '<i18n:message key="ORYX.I18N.View.sim.resultsNumOfExecutions">Num. of Executions: </i18n:message>';
 ORYX.I18N.View.sim.resultsInterval = '<i18n:message key="ORYX.I18N.View.sim.resultsInterval">Interval </i18n:message>';
+ORYX.I18N.View.sim.resultsPath = '<i18n:message key="ORYX.I18N.View.sim.resultsPath">Path</i18n:message>';
+ORYX.I18N.View.sim.resultsOtherPaths = '<i18n:message key="ORYX.I18N.View.sim.resultsOtherPaths">Other Paths</i18n:message>';
 ORYX.I18N.View.sim.resultsGroupProcess = '<i18n:message key="ORYX.I18N.View.sim.resultsGroupProcess">Process</i18n:message>';
 ORYX.I18N.View.sim.resultsGroupProcessElements = '<i18n:message key="ORYX.I18N.View.sim.resultsGroupProcessElements">Process Elements</i18n:message>';
 ORYX.I18N.View.sim.resultsGroupProcessPaths = '<i18n:message key="ORYX.I18N.View.sim.resultsGroupProcessPaths">Paths</i18n:message>';
@@ -704,14 +764,48 @@ ORYX.I18N.View.sim.resultsTitlesTaskSimResults = '<i18n:message key="ORYX.I18N.V
 ORYX.I18N.View.sim.resultsTitlesHumanTaskSimResults = '<i18n:message key="ORYX.I18N.View.sim.resultsTitlesHumanTaskSimResults">Human Task Simulation Results</i18n:message>';
 ORYX.I18N.View.sim.resultsTitlesPathExecutionInfo = '<i18n:message key="ORYX.I18N.View.sim.resultsTitlesPathExecutionInfo">Path Execution Info</i18n:message>';
 ORYX.I18N.View.sim.chartsExecutionTimes = '<i18n:message key="ORYX.I18N.View.sim.chartsExecutionTimes">Execution Times</i18n:message>';
+ORYX.I18N.View.sim.chartsExecutionTimesTime = '<i18n:message key="ORYX.I18N.View.sim.chartsExecutionTimesTime">Time</i18n:message>';
 ORYX.I18N.View.sim.chartsActivityInstances = '<i18n:message key="ORYX.I18N.View.sim.chartsActivityInstances">Activity Instances</i18n:message>';
+ORYX.I18N.View.sim.chartsActivityInstancesInstances = '<i18n:message key="ORYX.I18N.View.sim.chartsActivityInstancesInstances">Instances</i18n:message>';
 ORYX.I18N.View.sim.chartsTotalCost = '<i18n:message key="ORYX.I18N.View.sim.chartsTotalCost">Total Cost</i18n:message>';
+ORYX.I18N.View.sim.chartsTotalCostCost = '<i18n:message key="ORYX.I18N.View.sim.chartsTotalCostCost">Cost</i18n:message>';
+ORYX.I18N.View.sim.chartsTotalCostCurrency = '<i18n:message key="ORYX.I18N.View.sim.chartsTotalCostCurrency">USD</i18n:message>';
 ORYX.I18N.View.sim.chartsTotalResourceUtilization = '<i18n:message key="ORYX.I18N.View.sim.chartsTotalResourceUtilization">Total Resource Utilization</i18n:message>';
+ORYX.I18N.View.sim.chartsTotalResourceUtilizationPercentages = '<i18n:message key="ORYX.I18N.View.sim.chartsTotalResourceUtilizationPercentages">Percentages</i18n:message>';
 ORYX.I18N.View.sim.chartsResourceUtilization = '<i18n:message key="ORYX.I18N.View.sim.chartsResourceUtilization">Resource Utilization</i18n:message>';
 ORYX.I18N.View.sim.chartsResourceCost = '<i18n:message key="ORYX.I18N.View.sim.chartsResourceCost">Resource Cost</i18n:message>';
+ORYX.I18N.View.sim.chartsWaitTimes = '<i18n:message key="ORYX.I18N.View.sim.chartsWaitTimes">Wait Times</i18n:message>';
+ORYX.I18N.View.sim.chartsResourceAllocations = '<i18n:message key="ORYX.I18N.View.sim.chartsResourceAllocations">Resource Allocations</i18n:message>';
 ORYX.I18N.View.sim.chartsPathImage = '<i18n:message key="ORYX.I18N.View.sim.chartsPathImage">Path Image</i18n:message>';
 ORYX.I18N.View.sim.chartsPathInstanceExecution = '<i18n:message key="ORYX.I18N.View.sim.chartsPathInstanceExecution">Path Instance Execution</i18n:message>';
+ORYX.I18N.View.sim.chartsMax = '<i18n:message key="ORYX.I18N.View.sim.chartsMax">Max</i18n:message>';
+ORYX.I18N.View.sim.chartsMin = '<i18n:message key="ORYX.I18N.View.sim.chartsMin">Min</i18n:message>';
+ORYX.I18N.View.sim.chartsAverage = '<i18n:message key="ORYX.I18N.View.sim.chartsAverage">Average</i18n:message>';
+ORYX.I18N.View.sim.chartsProcessExecutionTimesDuringSimulation = '<i18n:message key="ORYX.I18N.View.sim.chartsProcessExecutionTimesDuringSimulation">Process execution times during Simulation</i18n:message>';
+ORYX.I18N.View.sim.chartsSimulationTime = '<i18n:message key="ORYX.I18N.View.sim.chartsSimulationTime">Simulation Time</i18n:message>';
+ORYX.I18N.View.sim.chartsMaxExecutionTime = '<i18n:message key="ORYX.I18N.View.sim.chartsMaxExecutionTime">Max Execution Time</i18n:message>';
+ORYX.I18N.View.sim.chartsMinExecutionTime = '<i18n:message key="ORYX.I18N.View.sim.chartsMinExecutionTime">Min Execution Time</i18n:message>';
+ORYX.I18N.View.sim.chartsAvgExecutionTime = '<i18n:message key="ORYX.I18N.View.sim.chartsAvgExecutionTime">Avg Execution Time</i18n:message>';
+ORYX.I18N.View.sim.chartsProcessAverages = '<i18n:message key="ORYX.I18N.View.sim.chartsProcessAverages">Process Averages</i18n:message>';
+ORYX.I18N.View.sim.timelineProcessExecutionTimes = '<i18n:message key="ORYX.I18N.View.sim.timelineProcessExecutionTimes">Process Execution Times</i18n:message>';
+ORYX.I18N.View.sim.BarChart = '<i18n:message key="ORYX.I18N.View.sim.BarChart">Bar Chart</i18n:message>';
+ORYX.I18N.View.sim.HorizontalBarChart = '<i18n:message key="ORYX.I18N.View.sim.HorizontalBarChart">Horizontal Bar Chart</i18n:message>';
+ORYX.I18N.View.sim.PieChart = '<i18n:message key="ORYX.I18N.View.sim.PieChart">Pie Chart</i18n:message>';
+ORYX.I18N.View.sim.Table = '<i18n:message key="ORYX.I18N.View.sim.Table">Table</i18n:message>';
+ORYX.I18N.View.sim.Timeline = '<i18n:message key="ORYX.I18N.View.sim.Timeline">Timeline</i18n:message>';
+ORYX.I18N.View.sim.LoadingTimeline = '<i18n:message key="ORYX.I18N.View.sim.LoadingTimeline">Loading Timeline...</i18n:message>';
+ORYX.I18N.View.sim.LineChart = '<i18n:message key="ORYX.I18N.View.sim.LineChart">Line Chart</i18n:message>';
+ORYX.I18N.View.sim.NoDataAvailable = '<i18n:message key="ORYX.I18N.View.sim.NoDataAvailable">No Data Available.</i18n:message>';
+ORYX.I18N.View.sim.Chart = '<i18n:message key="ORYX.I18N.View.sim.Chart">Chart</i18n:message>';
+ORYX.I18N.View.sim.Model = '<i18n:message key="ORYX.I18N.View.sim.Model">Model</i18n:message>';
 
+if(!ORYX.I18N.View.sim.chartsTimeUnits) ORYX.I18N.View.sim.chartsTimeUnits = {};
+ORYX.I18N.View.sim.chartsTimeUnits['ms'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_ms">ms</i18n:message>';
+ORYX.I18N.View.sim.chartsTimeUnits['s'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_s">s</i18n:message>';
+ORYX.I18N.View.sim.chartsTimeUnits['min'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_min">min</i18n:message>';
+ORYX.I18N.View.sim.chartsTimeUnits['hour'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_hour">hour</i18n:message>';
+ORYX.I18N.View.sim.chartsTimeUnits['day'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_day">day</i18n:message>';
+ORYX.I18N.View.sim.chartsTimeUnits['year'] = '<i18n:message key="ORYX.I18N.View.sim.chartsTimeUnits_year">year</i18n:message>';
 
 if(!ORYX.I18N.XFormsSerialization) ORYX.I18N.XFormsSerialization = {};
 
@@ -1236,6 +1330,7 @@ ORYX.I18N.forms.invalidNumberNodes='<i18n:message key="ORYX.I18N.forms.invalidNu
 ORYX.I18N.forms.successGenTask='<i18n:message key="ORYX.I18N.forms.successGenTask">Successfully generated task form template.</i18n:message>';
 ORYX.I18N.forms.failGenTask='<i18n:message key="ORYX.I18N.forms.failGenTask"><p>Failed to generate task form template.</p></i18n:message>';
 ORYX.I18N.forms.failNoTaskName='<i18n:message key="ORYX.I18N.forms.failNoTaskName">Task Name not specified.</i18n:message>';
+ORYX.I18N.forms.failInvalidTaskName='<i18n:message key="ORYX.I18N.forms.failInvalidTaskName">Task Name not specified.</i18n:message>';
 ORYX.I18N.forms.failNoUserTask='<i18n:message key="ORYX.I18N.forms.failNoUserTask">Selected node is not User Task.</i18n:message>';
 ORYX.I18N.forms.failNoTaskSelected='<i18n:message key="ORYX.I18N.forms.failNoTaskSelected">No task selected.</i18n:message>';
 ORYX.I18N.forms.failProcIdUndef='<i18n:message key="ORYX.I18N.forms.failProcIdUndef">Process Id not specified.</i18n:message>';
@@ -1247,6 +1342,9 @@ if(!ORYX.I18N.view) ORYX.I18N.view = {};
 ORYX.I18N.view.showFullScreen='<i18n:message key="ORYX.I18N.view.showFullScreen">Show in full screen</i18n:message>';
 ORYX.I18N.view.showFullScreen_desc='<i18n:message key="ORYX.I18N.view.showFullScreen_desc">Show in full screen mode</i18n:message>';
 ORYX.I18N.view.failShowFullScreen='<i18n:message key="ORYX.I18N.view.failShowFullScreen">Browser does not support full screen mode.</i18n:message>';
+ORYX.I18N.view.toggleFullScreen='<i18n:message key="ORYX.I18N.view.toggleFullScreen">Toggle full screen mode</i18n:message>';
+ORYX.I18N.view.toggleFullScreen_desc='<i18n:message key="ORYX.I18N.view.toggleFullScreen_desc">Toggle full screen mode</i18n:message>';
+
 
 ORYX.I18N.view.shareProcessImg='<i18n:message key="ORYX.I18N.view.shareProcessImg">Share Process Image</i18n:message>';
 ORYX.I18N.view.shareProcessImg_desc='<i18n:message key="ORYX.I18N.view.shareProcessImg_desc">Share Process Image</i18n:message>';
@@ -1260,6 +1358,8 @@ ORYX.I18N.view.downloadProcPDF='<i18n:message key="ORYX.I18N.view.downloadProcPD
 ORYX.I18N.view.downloadProcPDF_desc='<i18n:message key="ORYX.I18N.view.downloadProcPDF_desc">Download Process PDF</i18n:message>';
 ORYX.I18N.view.downloadProcPNG='<i18n:message key="ORYX.I18N.view.downloadProcPNG">Download Process PNG</i18n:message>';
 ORYX.I18N.view.downloadProcPNG_desc='<i18n:message key="ORYX.I18N.view.downloadProcPNG_desc">Download Process PNG</i18n:message>';
+ORYX.I18N.view.downloadProcSVG='<i18n:message key="ORYX.I18N.view.downloadProcSVG">Download Process SVG</i18n:message>';
+ORYX.I18N.view.downloadProcSVG_desc='<i18n:message key="ORYX.I18N.view.downloadProcSVG_desc">Download Process SVG</i18n:message>';
 ORYX.I18N.view.viewProcSources='<i18n:message key="ORYX.I18N.view.viewProcSources">View Process Sources</i18n:message>';
 ORYX.I18N.view.viewProcSources_desc='<i18n:message key="ORYX.I18N.view.viewProcSources_desc">View Process Sources</i18n:message>';
 ORYX.I18N.view.importFromBPMN2ErrorCheckLogs='<i18n:message key="ORYX.I18N.view.importFromBPMN2ErrorCheckLogs"><p>Check server logs for more details.</p></i18n:message>';
@@ -1283,7 +1383,9 @@ ORYX.I18N.view.failRetrieveVersionsSource='<i18n:message key="ORYX.I18N.view.fai
 ORYX.I18N.view.convertingToBPMN2Fail='<i18n:message key="ORYX.I18N.view.convertingToBPMN2Fail">Converting to BPMN2 failed</i18n:message>';
 ORYX.I18N.view.compareBPMN2PReviousVersions='<i18n:message key="ORYX.I18N.view.compareBPMN2PReviousVersions">Compare process BPMN2 with previous versions</i18n:message>';
 ORYX.I18N.view.replaceExistingModel='<i18n:message key="ORYX.I18N.view.replaceExistingModel">Replace existing model?</i18n:message>';
+ORYX.I18N.view.installSelectedWorkitem='<i18n:message key="ORYX.I18N.view.installSelectedWorkitem">Install selected item?</i18n:message>';
 ORYX.I18N.view.importSuccess='<i18n:message key="ORYX.I18N.view.importSuccess">Successfully imported</i18n:message>';
+ORYX.I18N.view.exporterUpdate='<i18n:message key="ORYX.I18N.view.exporterUpdate">Detected external exporter, process will be refreshed</i18n:message>';
 ORYX.I18N.view.unableImportProvided='<i18n:message key="ORYX.I18N.view.unableImportProvided">Unable to import provided</i18n:message>';
 ORYX.I18N.view.processSVGSource='<i18n:message key="ORYX.I18N.view.processSVGSource">Process SVG Source</i18n:message>';
 ORYX.I18N.view.erdfSource='<i18n:message key="ORYX.I18N.view.erdfSource">ERDF Source</i18n:message>';
@@ -1303,6 +1405,8 @@ ORYX.I18N.Save.rename='<i18n:message key="ORYX.I18N.Save.rename">Rename</i18n:me
 ORYX.I18N.Save.rename_desc='<i18n:message key="ORYX.I18N.Save.rename_desc">Rename asset</i18n:message>';
 ORYX.I18N.Save.delete_name='<i18n:message key="ORYX.I18N.Save.delete_name">Delete</i18n:message>';
 ORYX.I18N.Save.delete_desc='<i18n:message key="ORYX.I18N.Save.delete_desc">Delete asset</i18n:message>';
+ORYX.I18N.Save.saveItem='<i18n:message key="ORYX.I18N.Save.saveItem">Save this item</i18n:message>';
+ORYX.I18N.Save.saveCheckInComment='<i18n:message key="ORYX.I18N.Save.saveCheckInComment">Check in comment</i18n:message>';
 ORYX.I18N.Save.saveCancelled='<i18n:message key="ORYX.I18N.Save.saveCancelled">Save operation has been cancelled.</i18n:message>';
 ORYX.I18N.Save.processReloading='<i18n:message key="ORYX.I18N.Save.processReloading">Reloading process content.</i18n:message>';
 ORYX.I18N.Save.unableReloadContent='<i18n:message key="ORYX.I18N.Save.unableReloadContent">Unable to reload process content.</i18n:message>';
@@ -1373,6 +1477,7 @@ if(!ORYX.I18N.inlineTaskFormEditor) ORYX.I18N.inlineTaskFormEditor = {}
 ORYX.I18N.inlineTaskFormEditor.formEditor='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.formEditor">Form Editor</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.selectForm='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.selectForm">Select which Form Editor to use:</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.graphicalModeler='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.graphicalModeler">Graphical Modeler</i18n:message>';
+ORYX.I18N.inlineTaskFormEditor.graphicalModelerPreview='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.graphicalModelerPreview">Graphical Modeler (Preview)</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.markupEditor='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.markupEditor">Markup Editor</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.errorInitiatingEditor='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.errorInitiatingEditor">Error initiating Form Editor</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.errorInitiatingWidgets='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.errorInitiatingWidgets">Error initiating Form Widgets</i18n:message>';
@@ -1384,6 +1489,9 @@ ORYX.I18N.inlineTaskFormEditor.editingForm='<i18n:message key="ORYX.I18N.inlineT
 ORYX.I18N.inlineTaskFormEditor.completionInst='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.completionInst">Press [Ctrl-Z] to activate auto-completion</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.storingForm='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.storingForm">Storing Task Form</i18n:message>';
 ORYX.I18N.inlineTaskFormEditor.errorSavingForm='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.errorSavingForm">Error saving Task Form</i18n:message>';
+ORYX.I18N.inlineTaskFormEditor.processMustBeSavedTitle='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.processMustBeSavedTitle">Process must be saved before generating forms</i18n:message>';
+ORYX.I18N.inlineTaskFormEditor.processMustBeSavedDesc='<i18n:message key="ORYX.I18N.inlineTaskFormEditor.processMustBeSavedDesc">Please save the process before genearing forms</i18n:message>';
+
 
 if(!ORYX.I18N.PetriNetSoundness) ORYX.I18N.PetriNetSoundness = {}
 
@@ -1472,8 +1580,8 @@ ORYX.I18N.propertyNames['bgcolor'] = '<i18n:message key="ORYX.I18N.propertyNames
 ORYX.I18N.propertyNames['bgcolor_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_bgColor_desc">Background Color</i18n:message>';
 ORYX.I18N.propertyNames['bordercolor'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_borderColor">Border Color</i18n:message>';
 ORYX.I18N.propertyNames['bordercolor_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_borderColor_desc">Border Color</i18n:message>';
-ORYX.I18N.propertyNames['fontcolor'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontcolor">Font color</i18n:message>';
-ORYX.I18N.propertyNames['fontcolor_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontcolor_desc">Font color</i18n:message>';
+ORYX.I18N.propertyNames['fontcolor'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontcolor">Font Color</i18n:message>';
+ORYX.I18N.propertyNames['fontcolor_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontcolor_desc">Font Color</i18n:message>';
 ORYX.I18N.propertyNames['fontsize'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontsize">Font Size</i18n:message>';
 ORYX.I18N.propertyNames['fontsize_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_BGCOLOR_fontsize_desc">Font Size</i18n:message>';
 
@@ -1520,8 +1628,8 @@ ORYX.I18N.propertyNames['datainputset'] = '<i18n:message key="ORYX.I18N.property
 ORYX.I18N.propertyNames['datainputset_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_datainputset_desc">An InputSet is a collection of DataInput elements that together define a valid set of data inputs.</i18n:message>';
 ORYX.I18N.propertyNames['dataoutputset'] = '<i18n:message key="ORYX.I18N.propertyNames_dataoutputset">DataOutputSet</i18n:message>';
 ORYX.I18N.propertyNames['dataoutputset_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_dataoutputset_desc">An OutputSet is a collection of DataOutputs elements that together may be produced as output from an Activity or Event.</i18n:message>';
-ORYX.I18N.propertyNames['assignments'] = '<i18n:message key="ORYX.I18N.propertyNames_assignments">Assignments</i18n:message>';
-ORYX.I18N.propertyNames['assignments_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_assignments_desc">Assignments</i18n:message>';
+ORYX.I18N.propertyNames['assignmentsview'] = '<i18n:message key="ORYX.I18N.propertyNames_assignments">Assignments</i18n:message>';
+ORYX.I18N.propertyNames['assignmentsview_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_assignments_desc">Assignments</i18n:message>';
 ORYX.I18N.propertyNames['onEntryActions'] = '<i18n:message key="ORYX.I18N.propertyNames_onEntryActions">On Entry Actions</i18n:message>';
 ORYX.I18N.propertyNames['onEntryActions_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_onEntryActions_desc">On Entry Actions</i18n:message>';
 ORYX.I18N.propertyNames['onExitActions'] = '<i18n:message key="ORYX.I18N.propertyNames_onExitActions">On Exit Actions</i18n:message>';
@@ -1555,8 +1663,9 @@ ORYX.I18N.propertyNames['dataoutputassociations'] = '<i18n:message key="ORYX.I18
 ORYX.I18N.propertyNames['dataoutputassociations_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_dataoutputassociations_desc">The Data Associations of the catch Event.</i18n:message>';
 ORYX.I18N.propertyNames['dataoutput'] = '<i18n:message key="ORYX.I18N.propertyNames_dataoutput">DataOutput</i18n:message>';
 ORYX.I18N.propertyNames['dataoutput_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_dataoutput_desc">The Data Associations of the catch Event.</i18n:message>';
-ORYX.I18N.propertyNames['probability'] = '<i18n:message key="ORYX.I18N.propertyNames_probability">Probability (Boundary Event only)</i18n:message>';
+ORYX.I18N.propertyNames['probability'] = '<i18n:message key="ORYX.I18N.propertyNames_probability">Probability</i18n:message>';
 ORYX.I18N.propertyNames['probability_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_probability_desc">Probability</i18n:message>';
+ORYX.I18N.propertyNames['probability_boundaryonly'] = '<i18n:message key="ORYX.I18N.propertyNames_probability_boundaryonly">Probability (Boundary Event only)</i18n:message>';
 ORYX.I18N.propertyNames['eventdefinitions'] = '<i18n:message key="ORYX.I18N.propertyNames_eventdefinitions">EventDefinitions</i18n:message>';
 ORYX.I18N.propertyNames['eventdefinitions_desc'] = '<i18n:message key="ORYX.I18N.propertyNames_eventdefinitions_desc">EventDefinitions (EventDefinition) is an attribute that defines the type of contained triggers expected for a catch Event.</i18n:message>';
 ORYX.I18N.propertyNames['datainputassociations'] = '<i18n:message key="ORYX.I18N.propertyNames_datainputassociations">DataInputAssociations</i18n:message>';

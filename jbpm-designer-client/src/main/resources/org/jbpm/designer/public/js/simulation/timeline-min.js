@@ -4102,7 +4102,8 @@ if(typeof VMM != 'undefined' && typeof VMM.Slider == 'undefined') {
 		var layout				=	parent;
 		var navigation			=	{nextBtn:"", prevBtn:"", nextDate:"", prevDate:"", nextTitle:"", prevTitle:""};
 		var timer;
-		
+		var title				=   "Process Execution Times";
+
 		// CONFIG
 		if(typeof VMM.Timeline != 'undefined') {
 			config	= 	VMM.Timeline.Config;
@@ -4137,7 +4138,7 @@ if(typeof VMM != 'undefined' && typeof VMM.Slider == 'undefined') {
 		/* PUBLIC VARS
 		================================================== */
 		this.ver = "0.6";
-		
+
 		config.slider.width		=	config.width;
 		config.slider.height	=	config.height;
 		
@@ -4220,6 +4221,12 @@ if(typeof VMM != 'undefined' && typeof VMM.Slider == 'undefined') {
 			goToSlide(n);
 			displayDataForEvent(n, data[current_slide].activityid);
 		};
+
+		this.setTitle = function(s) {
+			if (s !== undefined) {
+				title = s;
+			}
+		}
 		
 		/* ON EVENT
 		================================================== */
@@ -4726,7 +4733,7 @@ if(typeof VMM != 'undefined' && typeof VMM.Slider == 'undefined') {
 			$slider = VMM.getElement("div.slider");
 			$slider_mask = VMM.appendAndGetElement($slider, "<div>", "slider-container-mask");
 			var ccontent = "<center><div class='outterchart'> \
-						    <h6>Process Execution Times</h6> \
+						    <h6>" + title + "</h6> \
 							<p id='chartcontent'> \
 					        <svg id='chart' style='height:290px;width:400px'></svg> \
 							</p> \
@@ -5073,14 +5080,14 @@ if(typeof VMM != 'undefined' && typeof VMM.Language == 'undefined') {
 			month: "mmmm yyyy",
 			full_short: "mmm d",
 			full: "mmmm d',' yyyy",
-			time_no_seconds_short: "h:MM TT",
-			time_no_seconds_small_date: "h:MM TT'<br/><small>'mmmm d',' yyyy'</small>'",
-			full_long: "mmm d',' yyyy 'at' hh:MM TT",
-			full_long_small_date: "hh:MM TT'<br/><small>mmm d',' yyyy'</small>'",
-			time_only : "hh:MM:ss:L TT"
+			time_no_seconds_short: "hh:MM",
+			time_no_seconds_small_date: "hh:MM'<br/><small>'mmmm d',' yyyy'</small>'",
+			full_long: "mmm d',' yyyy 'at' hh:MM",
+			full_long_small_date: "hh:MM'<br/><small>mmm d',' yyyy'</small>'",
+			time_only : "hh:MM:ss:L"
 		},
 		messages: {
-			loading_timeline: "Loading Timeline... ",
+			loading_timeline: parent.parent.ORYX.I18N.View.sim.LoadingTimeline,
 			return_to_title: "Return to Title",
 			expand_timeline: "Expand Timeline",
 			contract_timeline: "Contract Timeline",
@@ -6269,7 +6276,8 @@ if(typeof VMM != 'undefined' && typeof VMM.Timeline == 'undefined') {
 				VMM.bindEvent("div.navigation", onTimeNavLoaded, "LOADED");
 				VMM.bindEvent("div.slider", onSlideUpdate, "UPDATE");
 				VMM.bindEvent("div.navigation", onMarkerUpdate, "UPDATE");
-			
+
+				slider.setTitle(data.sliderTitle);
 				slider.init(_dates);
 				timenav.init(_dates, data.era);
 			
@@ -6365,8 +6373,8 @@ if(typeof VMM != 'undefined' && typeof VMM.Timeline == 'undefined') {
 						//add new fields here
 						_date.id                = data.date[i].id;
 						_date.activityid        = data.date[i].activityid;
-						_date.title				= data.date[i].headline;
-						_date.headline			= data.date[i].headline;
+						_date.title				= data.date[i].headline.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+						_date.headline			= data.date[i].headline.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 						_date.type				= data.date[i].type;
 						_date.date				= VMM.Date.prettyDate(_date.startdate);
 						_date.asset				= data.date[i].asset;
@@ -6421,8 +6429,8 @@ if(typeof VMM != 'undefined' && typeof VMM.Timeline == 'undefined') {
 				
 				_date.uniqueid		= VMM.Util.unique_ID(7);
 				_date.enddate		= _date.startdate;
-				_date.title			= data.headline;
-				_date.headline		= data.headline;
+				_date.title			= data.headline.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+				_date.headline		= data.headline.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 				_date.text			= data.text;
 				_date.type			= "start";
 				_date.date			= VMM.Date.prettyDate(data.startDate);
@@ -8056,7 +8064,7 @@ if(typeof VMM.Timeline != 'undefined' && typeof VMM.Timeline.TimeNav == 'undefin
 						text_content: 		VMM.appendAndGetElement($timeinterval, "<div>", "era"),
 						startdate: 			VMM.Date.parse(eras[j].startDate),
 						enddate: 			VMM.Date.parse(eras[j].endDate),
-						title: 				eras[j].headline,
+						title: 				eras[j].headline.replace(/</g,'&lt;').replace(/>/g,'&gt;'),
 						uniqueid: 			VMM.Util.unique_ID(6),
 						tag:				"",
 						relative_pos:	 	""

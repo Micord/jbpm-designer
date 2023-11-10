@@ -1,11 +1,11 @@
 /*
- * Copyright 2010 JBoss Inc
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,20 +29,12 @@ import javax.servlet.ServletResponse;
 import org.jbpm.designer.web.filter.ConfigurableFilterConfig;
 import org.jbpm.designer.web.filter.IFilterFactory;
 
-
-/**
- * @author Antoine Toulme
- * 
- * a filter that can delegate to other filters detected via an OSGi declarative service.
- *
- */
 public class PluggableFilter implements Filter {
-    
+
     private static List<IFilterFactory> _registeredFilters = new ArrayList<IFilterFactory>();
     private List<Filter> _filters = new ArrayList<Filter>();
     private FilterConfig _filterConfig;
 
-    
     public static void registerFilter(IFilterFactory filter) {
         _registeredFilters.add(filter);
     }
@@ -51,14 +43,9 @@ public class PluggableFilter implements Filter {
         _filterConfig = filterConfig;
     }
 
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String encoding = this._filterConfig.getInitParameter("encoding");
-
-        if (encoding != null) {
-            request.setCharacterEncoding(encoding);
-            response.setCharacterEncoding(encoding);
-        }
-
+    public void doFilter(ServletRequest request,
+                         ServletResponse response,
+                         FilterChain chain) throws IOException, ServletException {
         if (_filters.size() != _registeredFilters.size()) {
             for (Filter f : _filters) {
                 f.destroy();
@@ -72,9 +59,12 @@ public class PluggableFilter implements Filter {
                 _filters.add(filter);
             }
         }
-        new FilterChainImpl(_filters, chain).doFilter(request, response);
+        new FilterChainImpl(_filters,
+                            chain).doFilter(request,
+                                            response);
         if (!response.isCommitted()) {
-            chain.doFilter(request, response);
+            chain.doFilter(request,
+                           response);
         }
     }
 
@@ -84,5 +74,4 @@ public class PluggableFilter implements Filter {
         }
         _filters.clear();
     }
-
 }

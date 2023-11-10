@@ -1,0 +1,20 @@
+[
+    [
+        "name" : "SwitchYardService",
+        "description" : "Switch Yart Service Integration",
+        "parameters" : [
+            "ServiceName" : new StringDataType(),
+            "ServiceOperationName" : new StringDataType()
+        ],
+        "displayName" : "SwitchYard Service",
+        "icon" : "switchyard.gif",
+        "category": "Integration",
+	"defaultHandler": "reflection: new com.switchyard.SwitchYardHandler",
+	"dependencies": [
+
+    	],
+	"mavenDependencies" : [
+		"org.jboss:switchyard:3.2"
+        ]
+    ]
+] 
