@@ -16,9 +16,8 @@
 
 package org.jbpm.designer.repository.filters;
 
-import java.nio.file.Path;
-
 import org.jbpm.designer.repository.Filter;
+import org.uberfire.java.nio.file.Path;
 
 public class FilterByExtension implements Filter<Path> {
 

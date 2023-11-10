@@ -15,8 +15,11 @@
  */
 package org.jbpm.designer.client.resources.images;
 
-public interface DesignerEditorImageResources /*extends ClientBundle*/ {
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
 
-//    @Source("bpmn2icon.png")
-//    ImageResource typeForm();
+public interface DesignerEditorImageResources extends ClientBundle {
+
+    @Source("bpmn2icon.png")
+    ImageResource typeForm();
 }

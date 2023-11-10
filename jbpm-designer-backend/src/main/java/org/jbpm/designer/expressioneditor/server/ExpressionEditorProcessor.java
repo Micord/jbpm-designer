@@ -121,12 +121,6 @@ public class ExpressionEditorProcessor {
             ExpressionParser parser = new ExpressionParser(script);
             conditionExpression = parser.parse();
             requestMessage.setExpression(conditionExpression);
-            if (parser.checkOnCustomExpression(script)) {
-                throw new ParseException("This is custom expression", parser.getParseIndex());
-            }
-            if (!parser.getErrorMessages().isEmpty()) {
-                throw new ParseException("The expression contains errors", parser.getParseIndex());
-            }
             requestMessage.setErrorCode(null);
             requestMessage.setErrorMessage(null);
         } catch (ParseException e) {

@@ -16,8 +16,6 @@
 
   <inherits name="org.uberfire.ext.editor.commons.UberfireCommonsEditorClient"/>
 
-  <inherits name="org.uberfire.ext.editor.commons.UberfireCommonsEditorClient"/>
-
   <inherits name="org.jbpm.designer.jBPMDesignerAPI"/>
   <inherits name="org.guvnor.common.services.project.GuvnorProjectAPI"/>
   <inherits name="org.guvnor.common.services.GuvnorServicesAPI"/>

@@ -1,5 +1,3 @@
-#ignore target dir
-target*/
 Eclipse, Netbeans and IntelliJ files
 /.*
 !.gitignore

@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -33,7 +35,6 @@ import org.apache.commons.io.IOUtils;
 import org.jbpm.designer.util.Utils;
 import org.jbpm.designer.web.profile.IDiagramProfile;
 import org.jbpm.designer.web.profile.IDiagramProfileService;
-import org.jbpm.designer.web.profile.impl.ProfileServiceImpl;
 import org.jbpm.designer.web.profile.impl.RepositoryInfo;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -48,7 +49,8 @@ public class ProcessDiffServiceServlet extends HttpServlet {
 
     protected IDiagramProfile profile;
 
-    private static IDiagramProfileService _profileService = ProfileServiceImpl.getInstance();
+    @Inject
+    private IDiagramProfileService _profileService = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {

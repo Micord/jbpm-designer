@@ -17,6 +17,8 @@
 package org.jbpm.designer.web.server;
 
 import java.io.IOException;
+
+import javax.inject.Inject;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -28,7 +30,6 @@ import org.jbpm.designer.bpmn2.validation.BPMN2SyntaxChecker;
 import org.jbpm.designer.util.Utils;
 import org.jbpm.designer.web.profile.IDiagramProfile;
 import org.jbpm.designer.web.profile.IDiagramProfileService;
-import org.jbpm.designer.web.profile.impl.ProfileServiceImpl;
 
 @WebServlet(displayName = "SyntaxChecker", name = "SyntaxCheckerServlet",
         urlPatterns = "/syntaxcheck")
@@ -38,7 +39,8 @@ public class SyntaxCheckerServlet extends HttpServlet {
 
     protected IDiagramProfile profile;
 
-    private static IDiagramProfileService _profileService = ProfileServiceImpl.getInstance();
+    @Inject
+    private IDiagramProfileService _profileService = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {

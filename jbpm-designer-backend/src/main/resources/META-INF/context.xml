@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Context antiResourceLocking="true">
-
-  <Loader delegate="true"/>
-  <JarScanner scanClassPath="false" scanManifest="false"/>
-
-</Context>
